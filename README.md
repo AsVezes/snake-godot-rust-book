@@ -6,7 +6,7 @@
 
 Este repositório público será a fonte de **código complementar** do livro *Crie um Snake com Rust e Godot 4* e de sua edição em inglês. O material acompanha a construção gradual de um jogo Snake em Godot 4, com regras e funcionalidades implementadas em Rust.
 
-> **Estado: em preparação.** O livro e o pacote de código para leitores ainda não foram lançados. Não há versão de download, código homologado ou licença pública disponibilizados neste repositório neste momento.
+> **Estado: em preparação.** O livro e o pacote de código para leitores ainda não foram lançados. A [licença MIT do código original](LICENSE) já está publicada, mas os checkpoints, o ZIP e as releases ainda aguardam auditoria de direitos e homologação.
 
 ## Materiais planejados
 
@@ -26,4 +26,4 @@ O **código original** deste projeto é disponibilizado sob a [licença MIT](LIC
 
 This is the public companion-code repository for *Crie um Snake com Rust e Godot 4* and its planned English edition, by **Elliot Veyran**, published under the **As Vezes** imprint.
 
-The repository will provide 16 progressive checkpoints, Rust learning material, transition patches, setup instructions, and edition-specific releases. **The code package and book have not been released yet.** Licensing and final quality checks are pending.
+The repository will provide 16 progressive checkpoints, Rust learning material, transition patches, setup instructions, and edition-specific releases. **The code package and book have not been released yet.** The original software's [MIT license](LICENSE) is available; third-party rights review and final quality checks remain pending.
