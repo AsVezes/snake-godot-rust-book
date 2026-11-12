@@ -20,7 +20,7 @@ Os checkpoints são **referências para consulta e recuperação**, não uma ins
 
 ## Licença e disponibilidade
 
-A licença do código original e as condições de distribuição dos recursos de terceiros estão em revisão. **Nenhuma licença de reutilização é concedida por este README.** Os arquivos serão incluídos somente depois de revisão técnica, editorial e de direitos.
+O **código original** deste projeto é disponibilizado sob a [licença MIT](LICENSE), com aviso de copyright em nome do pseudônimo **Elliot Veyran**. A licença **não cobre automaticamente** trechos ou materiais de terceiros, marcas, imagens, capa, texto integral dos livros ou outros conteúdos com avisos próprios. Os códigos dos checkpoints serão adicionados apenas depois da auditoria de direitos, privacidade e testes. **Não há pacote de código ou release publicado neste momento.**
 
 ## English
 
