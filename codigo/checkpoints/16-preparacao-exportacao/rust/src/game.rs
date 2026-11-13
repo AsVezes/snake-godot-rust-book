@@ -1,0 +1,418 @@
+//! Pure game rules, unchanged since checkpoint 05.
+//! Checkpoint 15 adds an opt-in measurement harness, not a gameplay optimization.
+use std::collections::VecDeque;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Cell {
+    pub x: i32,
+    pub y: i32,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+impl Direction {
+    fn delta(self) -> (i32, i32) {
+        match self {
+            Self::Up => (0, -1),
+            Self::Down => (0, 1),
+            Self::Left => (-1, 0),
+            Self::Right => (1, 0),
+        }
+    }
+
+    fn opposite(self, other: Self) -> bool {
+        matches!(
+            (self, other),
+            (Self::Up, Self::Down)
+                | (Self::Down, Self::Up)
+                | (Self::Left, Self::Right)
+                | (Self::Right, Self::Left)
+        )
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Phase {
+    Running,
+    Lost,
+    Won,
+}
+
+/// A short-lived read-only view of the current game state.
+/// Borrowing the deque avoids allocating a duplicate snake body.
+/// This view cannot outlive the Game it borrows, nor coexist with a mutable tick.
+pub struct GameView<'a> {
+    pub score: u32,
+    pub phase: Phase,
+    pub segments: &'a VecDeque<Cell>,
+    pub food: Option<Cell>,
+}
+
+pub struct Game {
+    width: i32,
+    height: i32,
+    body: VecDeque<Cell>,
+    direction: Direction,
+    pending: Direction,
+    food: Option<Cell>,
+    score: u32,
+    phase: Phase,
+    seed: u64,
+    rng_state: u64,
+}
+
+impl Game {
+    pub fn new(width: i32, height: i32) -> Self {
+        // Seed 42 keeps the entire teaching path reproducible, including CP16.
+        // Fresh per-session seeds are a possible extension, not implemented here.
+        Self::with_seed(width, height, 42)
+    }
+
+    pub fn with_seed(width: i32, height: i32, seed: u64) -> Self {
+        assert!(width >= 8 && height >= 6, "board too small");
+        let head = Cell {
+            x: width / 2,
+            y: height / 2,
+        };
+        Self {
+            width,
+            height,
+            body: VecDeque::from([
+                head,
+                Cell {
+                    x: head.x - 1,
+                    y: head.y,
+                },
+                Cell {
+                    x: head.x - 2,
+                    y: head.y,
+                },
+            ]),
+            direction: Direction::Right,
+            pending: Direction::Right,
+            food: Some(Cell {
+                x: head.x + 3,
+                y: head.y,
+            }),
+            score: 0,
+            phase: Phase::Running,
+            seed,
+            rng_state: if seed == 0 { 1 } else { seed },
+        }
+    }
+
+    pub fn turn(&mut self, wanted: Direction) {
+        // Compare against the direction of the last completed tick, not
+        // against 'pending'. That also blocks two rapid 90-degree turns.
+        if self.phase == Phase::Running && !self.direction.opposite(wanted) {
+            self.pending = wanted;
+        }
+    }
+
+    pub fn tick(&mut self) {
+        if self.phase != Phase::Running {
+            return;
+        }
+
+        let (dx, dy) = self.pending.delta();
+        let head = *self.body.front().expect("snake is never empty");
+        let next = Cell {
+            x: head.x + dx,
+            y: head.y + dy,
+        };
+        if next.x < 0 || next.y < 0 || next.x >= self.width || next.y >= self.height {
+            self.phase = Phase::Lost;
+            return;
+        }
+
+        let ate = self.food == Some(next);
+        let mut advanced = self.body.clone();
+        if !ate {
+            // Moving into the vacated tail cell is legal.
+            advanced.pop_back();
+        }
+        if advanced.contains(&next) {
+            self.phase = Phase::Lost;
+            return;
+        }
+        advanced.push_front(next);
+        self.body = advanced;
+        self.direction = self.pending;
+
+        if ate {
+            self.score += 1;
+            self.food = self.find_next_food();
+            if self.food.is_none() {
+                self.phase = Phase::Won;
+            }
+        }
+    }
+
+    fn next_random(&mut self) -> u64 {
+        // Small deterministic PRNG for a game, NOT for security.
+        let mut value = self.rng_state;
+        value ^= value >> 12;
+        value ^= value << 25;
+        value ^= value >> 27;
+        self.rng_state = value;
+        value.wrapping_mul(2_685_821_657_736_338_717)
+    }
+
+    fn find_next_food(&mut self) -> Option<Cell> {
+        let available =
+            (self.width as usize * self.height as usize).checked_sub(self.body.len())?;
+        if available == 0 {
+            return None;
+        }
+        let mut target = (self.next_random() % available as u64) as usize;
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let cell = Cell { x, y };
+                if self.body.contains(&cell) {
+                    continue;
+                }
+                if target == 0 {
+                    return Some(cell);
+                }
+                target -= 1;
+            }
+        }
+        None
+    }
+
+    pub fn reset(&mut self) {
+        *self = Self::with_seed(self.width, self.height, self.seed);
+    }
+
+    /// Reads a coherent state from one immutable borrow; no clone or allocation.
+    pub fn view(&self) -> GameView<'_> {
+        GameView {
+            score: self.score,
+            phase: self.phase,
+            segments: &self.body,
+            food: self.food,
+        }
+    }
+
+    pub fn segments(&self) -> &VecDeque<Cell> {
+        &self.body
+    }
+
+    pub fn food(&self) -> Option<Cell> {
+        self.food
+    }
+
+    pub fn score(&self) -> u32 {
+        self.score
+    }
+
+    pub fn phase(&self) -> Phase {
+        self.phase
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Opt-in measurement; excluded from normal cargo test and the QA gate.
+    /// Measures seven Game::tick calls on each initialized game (no constructors
+    /// inside the timer). It is NOT a cross-platform or version-independent score.
+    #[test]
+    #[ignore = "manual performance study: cargo test --release -- --ignored --nocapture"]
+    fn measure_baseline_game_ticks() {
+        use std::hint::black_box;
+        use std::time::Instant;
+
+        const GAME_COUNT: usize = 5_000;
+        const TICKS_PER_GAME: usize = 7;
+        let mut games: Vec<Game> = (0..GAME_COUNT).map(|_| Game::new(16, 12)).collect();
+        let started = Instant::now();
+        for game in &mut games {
+            for _ in 0..TICKS_PER_GAME {
+                game.tick();
+            }
+        }
+        let elapsed = started.elapsed();
+        let checksum: u64 = games
+            .iter()
+            .map(|game| u64::from(game.score()) + game.segments().len() as u64)
+            .sum();
+        black_box(checksum);
+        eprintln!(
+            "BENCH_TICK_BASELINE: games={} ticks={} total_ns={} checksum={} (informational only)",
+            GAME_COUNT,
+            GAME_COUNT * TICKS_PER_GAME,
+            elapsed.as_nanos(),
+            checksum
+        );
+    }
+
+    #[test]
+    fn baseline_seven_ticks_preserves_the_game_contract() {
+        let mut game = Game::new(16, 12);
+        for _ in 0..7 {
+            game.tick();
+        }
+        assert_eq!(game.segments()[0], Cell { x: 15, y: 6 });
+        assert_eq!(game.score(), 1);
+        assert_eq!(game.phase(), Phase::Running);
+        assert_eq!(game.view().score, 1);
+    }
+
+    #[test]
+    fn borrowed_view_shares_body_without_cloning() {
+        let game = Game::new(16, 12);
+        let view = game.view();
+        assert_eq!(view.score, 0);
+        assert_eq!(view.phase, Phase::Running);
+        assert_eq!(view.food, Some(Cell { x: 11, y: 6 }));
+        assert_eq!(view.segments[0], Cell { x: 8, y: 6 });
+        assert!(std::ptr::eq(view.segments, game.segments()));
+    }
+
+    #[test]
+    fn borrowed_view_reflects_only_completed_ticks() {
+        let mut game = Game::new(16, 12);
+        game.turn(Direction::Up);
+        assert_eq!(game.view().segments[0], Cell { x: 8, y: 6 });
+        game.tick();
+        let view = game.view();
+        assert_eq!(view.segments[0], Cell { x: 8, y: 5 });
+        assert_eq!(view.score, 0);
+        assert_eq!(view.phase, Phase::Running);
+    }
+
+    #[test]
+    fn starting_state() {
+        let game = Game::new(16, 12);
+        assert_eq!(game.segments().len(), 3);
+        assert_eq!(game.segments()[0], Cell { x: 8, y: 6 });
+        assert_eq!(game.food(), Some(Cell { x: 11, y: 6 }));
+        assert_eq!(game.score(), 0);
+        assert_eq!(game.phase(), Phase::Running);
+    }
+
+    #[test]
+    fn moves_one_cell_per_tick() {
+        let mut game = Game::new(16, 12);
+        game.tick();
+        assert_eq!(game.segments()[0], Cell { x: 9, y: 6 });
+    }
+
+    #[test]
+    fn blocks_reverse_even_after_two_fast_turns() {
+        let mut game = Game::new(16, 12);
+        game.turn(Direction::Up);
+        game.turn(Direction::Left);
+        game.tick();
+        assert_eq!(game.segments()[0], Cell { x: 8, y: 5 });
+    }
+
+    #[test]
+    fn eating_grows_and_scores() {
+        let mut game = Game::new(16, 12);
+        for _ in 0..3 {
+            game.tick();
+        }
+        assert_eq!(game.segments().len(), 4);
+        assert_eq!(game.score(), 1);
+        assert!(!game.segments().contains(&game.food().unwrap()));
+    }
+
+    #[test]
+    fn wall_collision_ends_play_and_stops_movement() {
+        let mut game = Game::new(16, 12);
+        for _ in 0..8 {
+            game.tick();
+        }
+        assert_eq!(game.phase(), Phase::Lost);
+        let body = game.segments().clone();
+        game.tick();
+        assert_eq!(game.segments(), &body);
+    }
+
+    #[test]
+    fn moving_into_non_vacated_body_is_loss() {
+        let mut game = Game::new(16, 12);
+        game.body = VecDeque::from([
+            Cell { x: 2, y: 2 },
+            Cell { x: 3, y: 2 },
+            Cell { x: 3, y: 3 },
+            Cell { x: 2, y: 3 },
+        ]);
+        game.direction = Direction::Right;
+        game.pending = Direction::Right;
+        game.food = Some(Cell { x: 10, y: 10 });
+        game.tick();
+        assert_eq!(game.phase(), Phase::Lost);
+    }
+
+    #[test]
+    fn vacated_tail_does_not_count_as_collision() {
+        let mut game = Game::new(16, 12);
+        game.body = VecDeque::from([
+            Cell { x: 2, y: 2 },
+            Cell { x: 2, y: 3 },
+            Cell { x: 3, y: 3 },
+            Cell { x: 3, y: 2 },
+        ]);
+        game.direction = Direction::Right;
+        game.pending = Direction::Right;
+        game.food = Some(Cell { x: 10, y: 10 });
+        game.tick();
+        assert_eq!(game.phase(), Phase::Running);
+        assert_eq!(game.segments()[0], Cell { x: 3, y: 2 });
+    }
+
+    #[test]
+    fn seed_reproduces_food_position() {
+        let mut a = Game::with_seed(16, 12, 123);
+        let mut b = Game::with_seed(16, 12, 123);
+        for _ in 0..3 {
+            a.tick();
+            b.tick();
+        }
+        assert_eq!(a.food(), b.food());
+    }
+
+    #[test]
+    fn reset_restores_state() {
+        let mut game = Game::new(16, 12);
+        for _ in 0..8 {
+            game.tick();
+        }
+        game.reset();
+        assert_eq!(game.phase(), Phase::Running);
+        assert_eq!(game.score(), 0);
+        assert_eq!(game.segments().len(), 3);
+    }
+
+    #[test]
+    fn filling_the_board_wins() {
+        let mut game = Game::with_seed(8, 6, 7);
+        let mut body = VecDeque::new();
+        body.push_back(Cell { x: 6, y: 5 });
+        for y in 0..6 {
+            for x in 0..8 {
+                if (x, y) != (6, 5) && (x, y) != (7, 5) {
+                    body.push_back(Cell { x, y });
+                }
+            }
+        }
+        game.body = body;
+        game.direction = Direction::Right;
+        game.pending = Direction::Right;
+        game.food = Some(Cell { x: 7, y: 5 });
+        game.tick();
+        assert_eq!(game.phase(), Phase::Won);
+        assert_eq!(game.segments().len(), 48);
+        assert_eq!(game.food(), None);
+    }
+}
