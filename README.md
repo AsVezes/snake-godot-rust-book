@@ -1,29 +1,25 @@
-# Snake com Rust e Godot 4 — código complementar
+# Godot 4 + Rust — código complementar do livro Snake 2D
 
-**Autor / Author:** Elliot Veyran  
-**Selo editorial / Imprint:** As Vezes  
-**Contato / Contact:** contato@asvezes.dev
+**Livro:** *Godot 4 + Rust: construa um Snake 2D passo a passo* (PT-BR)  
+**Autor:** Elliot Veyran · **Selo:** As Vezes
 
-Este repositório público será a fonte de **código complementar** do livro *Crie um Snake com Rust e Godot 4* e de sua edição em inglês. O material acompanha a construção gradual de um jogo Snake em Godot 4, com regras e funcionalidades implementadas em Rust.
+Este repositório público disponibiliza o **código complementar** do livro: **16 checkpoints**, um laboratório independente de Rust para as preparações R1/R2, **6 patches de transição** e ferramentas de verificação. São fontes para acompanhar e comparar as etapas, não binários prontos.
 
-> **Estado: em preparação.** O livro e o pacote de código para leitores ainda não foram lançados. A [licença MIT do código original](LICENSE) já está publicada, mas os checkpoints, o ZIP e as releases ainda aguardam auditoria de direitos e homologação.
+## Obter o material
 
-## Materiais planejados
+Use **Code → Download ZIP** nesta página e extraia o pacote. Leia o [guia do leitor](README_PTBR.md), que explica as pastas e os comandos. Alternativamente, clone o repositório com Git. O [MANIFEST.json](MANIFEST.json) registra a revisão de código e os hashes Git dos arquivos.
 
-- **16 checkpoints** do projeto, alinhados à evolução apresentada no livro.
-- **Laboratório introdutório de Rust**, para revisar os conceitos usados no jogo.
-- **Patches de transição**, quando úteis para acompanhar a implementação progressiva.
-- **Instruções de instalação, execução e testes** para Godot e Rust.
-- **Releases versionadas**, ligadas a uma edição específica do livro para evitar mudanças inesperadas.
+- [16 checkpoints](codigo/checkpoints/) — cada etapa é uma referência independente.
+- [Laboratório Rust R1/R2](codigo/labs/snake_rust_lab/) — soluções de apoio, não substitui exercícios.
+- [Patches de transição](codigo/transicoes/) — opcionais, conforme o texto do livro.
+- [Ferramenta de verificação](codigo/tools/book_checkpoints.py).
 
-Os checkpoints são **referências para consulta e recuperação**, não uma instrução para substituir todo o projeto do leitor a cada capítulo.
+**Importante:** o leitor desenvolve sempre o mesmo jogo em `meu-snake/`; não substitua seu projeto inteiro pela pasta de um checkpoint. A partir do 03, instale Rust/Cargo e compile a crate da etapa ou do seu próprio projeto. Os primeiros dois checkpoints são exclusivamente Godot.
 
-## Licença e disponibilidade
+## Licenciamento
 
-O **código original** deste projeto é disponibilizado sob a [licença MIT](LICENSE), com aviso de copyright em nome do pseudônimo **Elliot Veyran**. A licença **não cobre automaticamente** trechos ou materiais de terceiros, marcas, imagens, capa, texto integral dos livros ou outros conteúdos com avisos próprios. Os códigos dos checkpoints serão adicionados apenas depois da auditoria de direitos, privacidade e testes. **Não há pacote de código ou release publicado neste momento.**
+O **código original** tem licença [MIT](LICENSE). Materiais e dependências de terceiros permanecem sob suas próprias licenças. A licença **não se estende** ao conteúdo do eBook ou à arte da capa; este repositório não inclui bibliotecas compiladas ou a engine Godot.
 
-## English
+## Proveniência
 
-This is the public companion-code repository for *Crie um Snake com Rust e Godot 4* and its planned English edition, by **Elliot Veyran**, published under the **As Vezes** imprint.
-
-The repository will provide 16 progressive checkpoints, Rust learning material, transition patches, setup instructions, and edition-specific releases. **The code package and book have not been released yet.** The original software's [MIT license](LICENSE) is available; third-party rights review and final quality checks remain pending.
+Seleção controlada do código de referência da edição PT-BR. Revisão de origem (somente identificação dos fontes): `39fdbfe4754dc05edd9409831802feb48c1d5acf`. Os arquivos deste repositório têm seu próprio histórico Git e não expõem a documentação privada de produção.
