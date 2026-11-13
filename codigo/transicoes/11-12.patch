@@ -1,0 +1,605 @@
+--- a/godot/Board.gd
++++ b/godot/Board.gd
+@@ -1,5 +1,5 @@
+ extends Node2D
+-# Chapter 11: retain record and SQLite history; display the ten best scores.
++# Chapter 12: track logical ticks and safely migrate the local history schema.
+-# Snake movement rules remain unchanged; SnakeBridge also exposes ranking queries.
++# Snake movement rules remain unchanged; SnakeBridge adds migration/backup APIs.
+ # Input and drawing stay in Godot; rules remain in Rust Game.
+ 
+@@ -21,6 +21,7 @@
+ var save_failed: bool = false
+ var history_failed: bool = false
+ var history_count: int = -1
++var match_ticks: int = 0
+ var ranking_visible: bool = false
+ var ranking_panel: Panel
+ var ranking_label: Label
+@@ -43,6 +44,7 @@
+     has_started = false
+     user_paused = false
+     completed_recorded = false
++    match_ticks = 0
+     ranking_visible = false
+     if ranking_panel != null:
+         ranking_panel.visible = false
+@@ -93,6 +95,7 @@
+     if elapsed >= STEP_SECONDS:
+         elapsed -= STEP_SECONDS
+         bridge.advance_game()
++        match_ticks += 1
+         if bridge.is_game_over():
+             _record_completion_once()
+         _update_status()
+@@ -104,7 +107,7 @@
+         return
+     completed_recorded = true
+     var score: int = bridge.current_score()
+-    if not bridge.record_completed_match(_absolute_history_path(), score, bridge.did_win()):
++    if not bridge.record_completed_match(_absolute_history_path(), score, bridge.did_win(), match_ticks):
+         history_failed = true
+         push_warning("Could not save completed match to SQLite")
+     else:
+@@ -133,6 +136,9 @@
+ func _refresh_ranking() -> void:
+     var lines: PackedStringArray = PackedStringArray()
+     lines.append("DEZ MELHORES" if portuguese else "TOP TEN SCORES")
++    var version: int = int(bridge.history_schema_version(_absolute_history_path()))
++    if version >= 0:
++        lines.append(("Versão do banco: %d" if portuguese else "Database version: %d") % version)
+     lines.append("")
+     # [] means zero completed matches; [-1] is a SQLite query error.
+     # The Rust schema forbids negative persisted scores.
+--- a/godot/SmokeTest.gd
++++ b/godot/SmokeTest.gd
+@@ -12,7 +12,7 @@
+     checks += 1
+     if not ok:
+         failures.append(description)
+-        push_error("CH11_FAIL: " + description)
++        push_error("CH12_FAIL: " + description)
+ 
+ func press(board: Node, keycode: Key) -> void:
+     var event: InputEventKey = InputEventKey.new()
+@@ -26,16 +26,16 @@
+ func _run() -> void:
+     var resource: PackedScene = load("res://Main.tscn") as PackedScene
+     if resource == null:
+-        push_error("CH11_FAIL: Main.tscn not loaded")
++        push_error("CH12_FAIL: Main.tscn not loaded")
+         quit(1)
+         return
+ 
+     # Isolate the database from the player's real data, BEFORE _ready.
+-    var test_db: String = "user://checkpoint11_smoke_scores.db"
++    var test_db: String = "user://checkpoint12_smoke_scores.db"
+     var native_db: String = ProjectSettings.globalize_path(test_db)
+     if FileAccess.file_exists(test_db):
+         DirAccess.remove_absolute(native_db)
+-    var score_fixture: String = "user://checkpoint11_smoke_player_best.txt"
++    var score_fixture: String = "user://checkpoint12_smoke_player_best.txt"
+     var score_fixture_native: String = ProjectSettings.globalize_path(score_fixture)
+     if FileAccess.file_exists(score_fixture):
+         DirAccess.remove_absolute(score_fixture_native)
+@@ -134,7 +134,7 @@
+     check(status.text.contains("Score: 1"), "HUD reports score after eating")
+ 
+     # Use a separate temporary path: never change the player's real record.
+-    var test_path: String = "user://checkpoint11_smoke_record.txt"
++    var test_path: String = "user://checkpoint12_smoke_record.txt"
+     var absolute_path: String = ProjectSettings.globalize_path(test_path)
+     if FileAccess.file_exists(test_path):
+         DirAccess.remove_absolute(absolute_path)
+@@ -155,10 +155,19 @@
+         check(false, "fixture file opens for corruption test")
+     check(DirAccess.remove_absolute(absolute_path) == OK, "temporary high-score file removed")
+ 
+-    check(game.record_completed_match(native_db, 3, false), "records a loss")
+-    check(game.record_completed_match(native_db, 7, true), "records a win")
++    check(game.record_completed_match(native_db, 3, false, 12), "records a loss")
++    check(game.record_completed_match(native_db, 7, true, 21), "records a win")
+     check(game.completed_match_count(native_db) == 2, "two matches saved")
+-    check(not game.record_completed_match(native_db, -1, false), "rejects negative scores")
++    check(game.history_schema_version(native_db) == 2, "database schema upgraded to v2")
++    var backup_file: String = "user://checkpoint12_smoke_backup.db"
++    var backup_native: String = ProjectSettings.globalize_path(backup_file)
++    if FileAccess.file_exists(backup_file):
++        DirAccess.remove_absolute(backup_native)
++    check(game.backup_completed_matches(native_db, backup_native), "backup requested explicitly succeeds")
++    check(game.completed_match_count(backup_native) == 2, "backup includes both stored matches")
++    check(DirAccess.remove_absolute(backup_native) == OK, "temporary backup removed")
++    check(not game.record_completed_match(native_db, 2, true, -1), "negative tick count rejected")
++    check(not game.record_completed_match(native_db, -1, false, 1), "rejects negative scores")
+     check(game.completed_match_count(native_db) == 2, "invalid input does not write")
+     var top_two: Array = game.top_ten_scores(native_db)
+     check(top_two.size() == 2, "ranking includes the two stored matches")
+@@ -173,6 +182,7 @@
+         press(board, KEY_H)
+         check(board.get("ranking_visible") and rank_panel.visible, "H opens the ranking")
+         check(rank_text.text.contains("1. 7") and rank_text.text.contains("2. 3"), "ranked scores are visible")
++        check(rank_text.text.contains("Database version: 2"), "ranking shows SQLite schema version")
+         var held_head: Vector2i = game.snake_cells()[0]
+         tick(board, 1.0)
+         check(game.snake_cells()[0] == held_head, "ranking blocks movement")
+@@ -196,11 +206,13 @@
+     tick(board, 1.0)
+     check(game.completed_match_count(native_db) == 3, "later frames do not duplicate match")
+     check(board.get("history_count") == 3, "HUD count refreshes")
++    check(game.history_schema_version(native_db) == 2, "migrated SQLite version equals two")
++    check(board.get("match_ticks") > 0, "completed game counts logical ticks")
+     var latest_rank: Array = game.top_ten_scores(native_db)
+     check(latest_rank.size() == 3, "completed match appears in ranking")
+     check(latest_rank[0] == 7, "leading score still first")
+ 
+-    var bad_db: String = "user://checkpoint11_smoke_corrupt.db"
++    var bad_db: String = "user://checkpoint12_smoke_corrupt.db"
+     var bad_native: String = ProjectSettings.globalize_path(bad_db)
+     if FileAccess.file_exists(bad_db):
+         DirAccess.remove_absolute(bad_native)
+@@ -226,7 +238,7 @@
+             )
+         press(board, KEY_H)
+         board.set("history_path", test_db)
+-        check(not game.record_completed_match(bad_native, 2, false), "corrupt SQL file not overwritten")
++        check(not game.record_completed_match(bad_native, 2, false, 1), "corrupt SQL file not overwritten")
+         check(DirAccess.remove_absolute(bad_native) == OK, "corrupt SQL fixture removed")
+     else:
+         check(false, "corrupt SQL fixture can be created")
+@@ -235,8 +247,8 @@
+         check(DirAccess.remove_absolute(score_fixture_native) == OK, "isolated high-score fixture removed")
+     board.queue_free()
+     if failures.is_empty():
+-        print("CHECKPOINT_11_SMOKE_OK: %d checks" % checks)
++        print("CHECKPOINT_12_SMOKE_OK: %d checks" % checks)
+         quit(0)
+     else:
+-        push_error("CHECKPOINT_11_SMOKE_FAILED: %d/%d" % [failures.size(), checks])
+-        quit(1)
++        push_error("CHECKPOINT_12_SMOKE_FAILED: %d/%d" % [failures.size(), checks])
++        quit(1)
+--- a/godot/Snake.gdextension
++++ b/godot/Snake.gdextension
+@@ -4,9 +4,9 @@
+ reloadable = false
+ 
+ [libraries]
+-linux.debug.x86_64 = "res://../rust/target/debug/librenda_snake_step11.so"
+-linux.release.x86_64 = "res://../rust/target/release/librenda_snake_step11.so"
+-windows.debug.x86_64 = "res://../rust/target/debug/renda_snake_step11.dll"
+-windows.release.x86_64 = "res://../rust/target/release/renda_snake_step11.dll"
+-macos.debug = "res://../rust/target/debug/librenda_snake_step11.dylib"
+-macos.release = "res://../rust/target/release/librenda_snake_step11.dylib"
++linux.debug.x86_64 = "res://../rust/target/debug/librenda_snake_step12.so"
++linux.release.x86_64 = "res://../rust/target/release/librenda_snake_step12.so"
++windows.debug.x86_64 = "res://../rust/target/debug/renda_snake_step12.dll"
++windows.release.x86_64 = "res://../rust/target/release/renda_snake_step12.dll"
++macos.debug = "res://../rust/target/debug/librenda_snake_step12.dylib"
++macos.release = "res://../rust/target/release/librenda_snake_step12.dylib"
+--- a/godot/project.godot
++++ b/godot/project.godot
+@@ -1,10 +1,18 @@
+-; Project created for the book's incremental checkpoint.
++; Engine configuration file.
++; It's best edited using the editor UI and not directly,
++; since the parameters that go here are not all obvious.
++;
++; Format:
++;   [section] ; section goes between []
++;   param=value ; assign values to parameters
++
+ config_version=5
+ 
+ [application]
+ 
+-config/name="Snake - Chapter 11"
++config/name="Snake - Chapter 12"
+ run/main_scene="res://Main.tscn"
++config/features=PackedStringArray("4.7")
+ 
+ [display]
+ 
+--- a/rust/Cargo.toml
++++ b/rust/Cargo.toml
+@@ -1,5 +1,5 @@
+ [package]
+-name = "renda_snake_step11"
++name = "renda_snake_step12"
+ version = "0.1.0"
+ edition = "2021"
+ publish = false
+--- a/rust/src/lib.rs
++++ b/rust/src/lib.rs
+@@ -1,4 +1,4 @@
+-//! Checkpoint 11: SnakeBridge can query a top-ten ranking without changing Game.
++//! Checkpoint 12: versioned SQLite migration; Game still owns pure Snake rules.
+ //! All rules still live in game.rs; this file converts Godot API types.
+ 
+ pub mod game;
+@@ -98,10 +98,16 @@
+ 
+     /// Called only when the Board sees a completed match.
+     #[func]
+-    fn record_completed_match(&self, absolute_path: GString, score: i32, won: bool) -> bool {
++    fn record_completed_match(
++        &self,
++        absolute_path: GString,
++        score: i32,
++        won: bool,
++        duration_ticks: i32,
++    ) -> bool {
+         let path = absolute_path.to_string();
+         ScoreStore::open(&path)
+-            .and_then(|store| store.record_completed(score, won))
++            .and_then(|store| store.record_completed(score, won, duration_ticks))
+             .is_ok()
+     }
+ 
+@@ -132,6 +138,22 @@
+         result
+     }
+ 
++    /// Explicit request only: never back up the user's history on each frame.
++    #[func]
++    fn backup_completed_matches(&self, source: GString, destination: GString) -> bool {
++        ScoreStore::open(&source.to_string())
++            .and_then(|store| store.backup_to(&destination.to_string()))
++            .is_ok()
++    }
++
++    /// -1 means the schema cannot be safely opened or read.
++    #[func]
++    fn history_schema_version(&self, absolute_path: GString) -> i64 {
++        ScoreStore::open(&absolute_path.to_string())
++            .and_then(|store| store.schema_version())
++            .unwrap_or(-1)
++    }
++
+     #[func]
+     fn did_win(&self) -> bool {
+         self.game.phase() == Phase::Won
+--- a/rust/src/score_store.rs
++++ b/rust/src/score_store.rs
+@@ -1,7 +1,9 @@
+ //! SQLite persistence is infrastructure, not part of the movement rules.
+ //! Open connections for history operations, never for game ticks.
+ 
+-use rusqlite::{params, Connection, Result};
++use rusqlite::{params, Connection, Error, Result, TransactionBehavior};
++
++const SCHEMA_VERSION: i64 = 2;
+ 
+ pub struct ScoreStore {
+     connection: Connection,
+@@ -12,24 +14,68 @@
+         Self::initialize(Connection::open(path)?)
+     }
+ 
+-    fn initialize(connection: Connection) -> Result<Self> {
+-        connection.execute_batch(
+-            "CREATE TABLE IF NOT EXISTS matches (
+-                id INTEGER PRIMARY KEY,
+-                score INTEGER NOT NULL CHECK (score >= 0),
+-                outcome TEXT NOT NULL CHECK (outcome IN ('lost', 'won')),
+-                finished_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+-            );",
+-        )?;
++    fn initialize(mut connection: Connection) -> Result<Self> {
++        // Previous checkpoints created the table without setting user_version.
++        let version: i64 = connection.pragma_query_value(None, "user_version", |row| row.get(0))?;
++        if !(0..=SCHEMA_VERSION).contains(&version) {
++            // Do not attempt to rewrite a database from a newer application.
++            return Err(Error::InvalidQuery);
++        }
++        if version < SCHEMA_VERSION {
++            let transaction =
++                connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
++            if version == 0 {
++                transaction.execute_batch(
++                    "CREATE TABLE IF NOT EXISTS matches (
++                        id INTEGER PRIMARY KEY,
++                        score INTEGER NOT NULL CHECK (score >= 0),
++                        outcome TEXT NOT NULL CHECK (outcome IN ('lost', 'won')),
++                        finished_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
++                    );
++                    PRAGMA user_version = 1;",
++                )?;
++            }
++            if version <= 1 {
++                // Existing rows receive a sentinel zero; future matches record real tick counts.
++                transaction.execute_batch(
++                    "ALTER TABLE matches
++                        ADD COLUMN duration_ticks INTEGER NOT NULL DEFAULT 0
++                        CHECK (duration_ticks >= 0);
++                    CREATE INDEX IF NOT EXISTS idx_matches_ranking
++                        ON matches (score DESC, id ASC);
++                    PRAGMA user_version = 2;",
++                )?;
++            }
++            // All schema updates and version changes succeed or roll back together.
++            transaction.commit()?;
++        }
++        let health: String =
++            connection.pragma_query_value(None, "quick_check", |row| row.get(0))?;
++        if health != "ok" {
++            return Err(Error::InvalidQuery);
++        }
+         Ok(Self { connection })
+     }
+ 
+-    pub fn record_completed(&self, score: i32, won: bool) -> Result<()> {
++    pub fn schema_version(&self) -> Result<i64> {
++        self.connection
++            .pragma_query_value(None, "user_version", |row| row.get(0))
++    }
++
++    pub fn record_completed(&self, score: i32, won: bool, duration_ticks: i32) -> Result<()> {
+         let outcome = if won { "won" } else { "lost" };
+         self.connection.execute(
+-            "INSERT INTO matches (score, outcome) VALUES (?1, ?2)",
+-            params![score, outcome],
++            "INSERT INTO matches (score, outcome, duration_ticks) VALUES (?1, ?2, ?3)",
++            params![score, outcome, duration_ticks],
+         )?;
++        Ok(())
++    }
++
++    /// A consistent SQLite snapshot at a NEW path, not a raw copy of an active DB.
++    /// VACUUM INTO requires a destination that does not already contain a database.
++    pub fn backup_to(&self, destination_path: &str) -> Result<()> {
++        self.connection
++            .execute("VACUUM INTO ?1", [destination_path])?;
+         Ok(())
+     }
+ 
+@@ -65,8 +111,8 @@
+     #[test]
+     fn stores_multiple_matches_and_outcomes() {
+         let store = memory_store();
+-        store.record_completed(3, false).unwrap();
+-        store.record_completed(7, true).unwrap();
++        store.record_completed(3, false, 0).unwrap();
++        store.record_completed(7, true, 0).unwrap();
+         assert_eq!(store.count_matches().unwrap(), 2);
+         let outcome: String = store
+             .connection
+@@ -80,7 +126,7 @@
+     #[test]
+     fn rejects_negative_scores_without_inserting() {
+         let store = memory_store();
+-        assert!(store.record_completed(-1, false).is_err());
++        assert!(store.record_completed(-1, false, 0).is_err());
+         assert_eq!(store.count_matches().unwrap(), 0);
+     }
+ 
+@@ -92,13 +138,13 @@
+             .unwrap()
+             .as_nanos();
+         let path = std::env::temp_dir().join(format!(
+-            "renda-snake-ch10-{}-{nonce}.db",
++            "renda-snake-ch12-{}-{nonce}.db",
+             std::process::id()
+         ));
+         let name = path.to_str().unwrap();
+         {
+             let store = ScoreStore::open(name).unwrap();
+-            store.record_completed(9, true).unwrap();
++            store.record_completed(9, true, 0).unwrap();
+         }
+         {
+             let reopened = ScoreStore::open(name).unwrap();
+@@ -117,7 +163,7 @@
+     fn ranking_sorts_descending_and_limits_to_ten() {
+         let store = memory_store();
+         for score in [2, 9, 1, 5, 9, 3, 10, 7, 8, 4, 6, 0] {
+-            store.record_completed(score, false).unwrap();
++            store.record_completed(score, false, 0).unwrap();
+         }
+         assert_eq!(
+             store.top_ten_scores().unwrap(),
+@@ -129,16 +175,180 @@
+     #[test]
+     fn ranking_is_read_only() {
+         let store = memory_store();
+-        store.record_completed(6, true).unwrap();
++        store.record_completed(6, true, 0).unwrap();
+         assert_eq!(store.top_ten_scores().unwrap(), vec![6]);
+         assert_eq!(store.top_ten_scores().unwrap(), vec![6]);
+         assert_eq!(store.count_matches().unwrap(), 1);
+     }
+ 
+     #[test]
++    fn new_database_has_version_two_and_tick_count() {
++        let store = memory_store();
++        assert_eq!(store.schema_version().unwrap(), 2);
++        store.record_completed(4, true, 18).unwrap();
++        let ticks: i64 = store
++            .connection
++            .query_row("SELECT duration_ticks FROM matches", [], |row| row.get(0))
++            .unwrap();
++        assert_eq!(ticks, 18);
++    }
++
++    #[test]
++    fn legacy_database_migrates_and_preserves_history() {
++        let connection = Connection::open_in_memory().unwrap();
++        connection
++            .execute_batch(
++                "CREATE TABLE matches (
++                id INTEGER PRIMARY KEY,
++                score INTEGER NOT NULL CHECK (score >= 0),
++                outcome TEXT NOT NULL CHECK (outcome IN ('lost', 'won')),
++                finished_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
++            );
++            INSERT INTO matches (score, outcome) VALUES (19, 'won');",
++            )
++            .unwrap();
++        let store = ScoreStore::initialize(connection).unwrap();
++        assert_eq!(store.schema_version().unwrap(), 2);
++        assert_eq!(store.top_ten_scores().unwrap(), vec![19]);
++        let ticks: i64 = store
++            .connection
++            .query_row("SELECT duration_ticks FROM matches", [], |row| row.get(0))
++            .unwrap();
++        assert_eq!(ticks, 0);
++    }
++
++    #[test]
++    fn migration_is_idempotent_on_reopen() {
++        let store = memory_store();
++        store.record_completed(6, false, 5).unwrap();
++        let connection = store.connection;
++        let reopened = ScoreStore::initialize(connection).unwrap();
++        assert_eq!(reopened.count_matches().unwrap(), 1);
++        assert_eq!(reopened.schema_version().unwrap(), 2);
++    }
++
++    #[test]
++    fn newer_version_is_rejected_without_overwriting_rows() {
++        use std::time::{SystemTime, UNIX_EPOCH};
++
++        let nonce = SystemTime::now()
++            .duration_since(UNIX_EPOCH)
++            .unwrap()
++            .as_nanos();
++        let path = std::env::temp_dir().join(format!(
++            "renda-snake-newer-schema-{}-{nonce}.db",
++            std::process::id()
++        ));
++
++        {
++            let connection = Connection::open(&path).unwrap();
++            connection
++                .execute_batch(
++                    "CREATE TABLE matches (id INTEGER PRIMARY KEY, score INTEGER);
++                     INSERT INTO matches (score) VALUES (17);
++                     PRAGMA user_version = 99;",
++                )
++                .unwrap();
++        }
++
++        assert!(ScoreStore::open(path.to_str().unwrap()).is_err());
++
++        // Reopen independently: a rejected schema must not be rewritten.
++        let connection = Connection::open(&path).unwrap();
++        let version: i64 = connection
++            .pragma_query_value(None, "user_version", |row| row.get(0))
++            .unwrap();
++        let score: i64 = connection
++            .query_row("SELECT score FROM matches", [], |row| row.get(0))
++            .unwrap();
++        assert_eq!(version, 99);
++        assert_eq!(score, 17);
++        drop(connection);
++        std::fs::remove_file(path).unwrap();
++    }
++
++    #[test]
++    fn failed_legacy_migration_rolls_back_column_and_version() {
++        use std::time::{SystemTime, UNIX_EPOCH};
++
++        let nonce = SystemTime::now()
++            .duration_since(UNIX_EPOCH)
++            .unwrap()
++            .as_nanos();
++        let path = std::env::temp_dir().join(format!(
++            "renda-snake-incompatible-schema-{}-{nonce}.db",
++            std::process::id()
++        ));
++
++        {
++            let connection = Connection::open(&path).unwrap();
++            connection
++                .execute_batch(
++                    "CREATE TABLE matches (id INTEGER PRIMARY KEY, legacy_points INTEGER);
++                     INSERT INTO matches (legacy_points) VALUES (13);",
++                )
++                .unwrap();
++        }
++
++        // ALTER adds duration_ticks, then the index creation fails (no score).
++        // The entire transaction must roll back instead of recording v2.
++        assert!(ScoreStore::open(path.to_str().unwrap()).is_err());
++
++        let connection = Connection::open(&path).unwrap();
++        let version: i64 = connection
++            .pragma_query_value(None, "user_version", |row| row.get(0))
++            .unwrap();
++        let columns_added: i64 = connection
++            .query_row(
++                "SELECT COUNT(*) FROM pragma_table_info('matches')
++                 WHERE name = 'duration_ticks'",
++                [],
++                |row| row.get(0),
++            )
++            .unwrap();
++        let previous_row: i64 = connection
++            .query_row("SELECT legacy_points FROM matches", [], |row| row.get(0))
++            .unwrap();
++        assert_eq!(version, 0);
++        assert_eq!(columns_added, 0);
++        assert_eq!(previous_row, 13);
++        drop(connection);
++        std::fs::remove_file(path).unwrap();
++    }
++
++    #[test]
++    fn database_rejects_negative_duration() {
++        let store = memory_store();
++        assert!(store.record_completed(5, false, -1).is_err());
++        assert_eq!(store.count_matches().unwrap(), 0);
++    }
++
++    #[test]
++    fn backup_is_consistent_and_preserves_rows() {
++        use std::time::{SystemTime, UNIX_EPOCH};
++        let nonce = SystemTime::now()
++            .duration_since(UNIX_EPOCH)
++            .unwrap()
++            .as_nanos();
++        let path = std::env::temp_dir().join(format!(
++            "renda-snake-ch12-backup-{}-{nonce}.db",
++            std::process::id()
++        ));
++        let destination = path.to_str().unwrap();
++        let store = memory_store();
++        store.record_completed(23, true, 90).unwrap();
++        store.backup_to(destination).unwrap();
++        let restored = ScoreStore::open(destination).unwrap();
++        assert_eq!(restored.schema_version().unwrap(), 2);
++        assert_eq!(restored.top_ten_scores().unwrap(), vec![23]);
++        drop(restored);
++        std::fs::remove_file(path).unwrap();
++    }
++
++    #[test]
+     fn invalid_parent_directory_is_reported() {
+         let path = std::env::temp_dir()
+-            .join(format!("renda-snake-ch10-missing-{}", std::process::id()))
++            .join(format!("renda-snake-ch12-missing-{}", std::process::id()))
+             .join("history.db");
+         assert!(ScoreStore::open(path.to_str().unwrap()).is_err());
+     }
+--- a/tools/run_checks.py
++++ b/tools/run_checks.py
+@@ -1,4 +1,4 @@
+-"""Run checkpoint 11's Rust/Godot checks without invoking a shell.
++"""Run checkpoint 12's Rust/Godot checks without invoking a shell.
+ 
+ Run from any directory: python3 tools/run_checks.py
+ """
+@@ -59,12 +59,12 @@
+         if result.returncode != 0:
+             print(f"FAIL exit {result.returncode}: {step.name}", file=sys.stderr)
+             return result.returncode
+-    print("CHECKPOINT_11_CHECKS_OK: all selected tools completed successfully")
++    print("CHECKPOINT_12_CHECKS_OK: all selected tools completed successfully")
+     return 0
+ 
+ 
+ def main(argv: list[str] | None = None) -> int:
+-    parser = argparse.ArgumentParser(description="Run Rust and Godot verification for teaching checkpoint 11")
++    parser = argparse.ArgumentParser(description="Run Rust and Godot verification for teaching checkpoint 12")
+     parser.add_argument("--godot-executable", default="godot", help="Path or command name for the Godot editor")
+     parser.add_argument("--rust-only", action="store_true", help="Skip Godot checks (not a complete validation)")
+     parser.add_argument("--timeout-seconds", type=float, default=180.0, help="Maximum seconds per external command")

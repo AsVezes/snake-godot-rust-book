@@ -1,0 +1,116 @@
+--- /dev/null
++++ b/godot/.godot/extension_list.cfg
+@@ -0,0 +1 @@
++res://Snake.gdextension
+--- a/godot/Board.gd
++++ b/godot/Board.gd
+@@ -1,22 +1,19 @@
+ extends Node2D
+-# Chapter 2: the board is drawn by Godot; the snake does not exist yet.
++# Chapter 3: Godot controls rendering; Rust exposes our first class.
+ 
+ const CELL_SIZE: int = 32
+ const BOARD_COLUMNS: int = 16
+ const BOARD_ROWS: int = 12
+ 
+-var seconds_elapsed: float = 0.0
++var bridge: SnakeBridge
+ 
+ @onready var status_label: Label = $Status
+ 
+ func _ready() -> void:
+-    status_label.text = "Godot is ready!"
++    bridge = SnakeBridge.new()
++    add_child(bridge)
++    status_label.text = bridge.message()
+     queue_redraw()
+-
+-func _process(delta: float) -> void:
+-    seconds_elapsed += delta
+-    # A visible effect proves that _process runs continuously.
+-    status_label.text = "Running: %.1f s" % seconds_elapsed
+ 
+ func _draw() -> void:
+     var width: float = BOARD_COLUMNS * CELL_SIZE
+--- a/godot/Main.tscn
++++ b/godot/Main.tscn
+@@ -17,4 +17,4 @@
+ offset_top = 423.0
+ offset_right = 632.0
+ offset_bottom = 465.0
+-text = "Chapter 2: drawing and lifecycle"
++text = "Chapter 3: native Rust bridge"
+--- /dev/null
++++ b/godot/Snake.gdextension
+@@ -0,0 +1,12 @@
++[configuration]
++entry_symbol = "gdext_rust_init"
++compatibility_minimum = 4.4
++reloadable = false
++
++[libraries]
++linux.debug.x86_64 = "res://../rust/target/debug/librenda_snake_step3.so"
++linux.release.x86_64 = "res://../rust/target/release/librenda_snake_step3.so"
++windows.debug.x86_64 = "res://../rust/target/debug/renda_snake_step3.dll"
++windows.release.x86_64 = "res://../rust/target/release/renda_snake_step3.dll"
++macos.debug = "res://../rust/target/debug/librenda_snake_step3.dylib"
++macos.release = "res://../rust/target/release/librenda_snake_step3.dylib"
+--- a/godot/project.godot
++++ b/godot/project.godot
+@@ -3,7 +3,7 @@
+ 
+ [application]
+ 
+-config/name="Snake - Chapter 2"
++config/name="Snake - Chapter 3"
+ run/main_scene="res://Main.tscn"
+ 
+ [display]
+--- /dev/null
++++ b/rust/Cargo.toml
+@@ -0,0 +1,11 @@
++[package]
++name = "renda_snake_step3"
++version = "0.1.0"
++edition = "2021"
++publish = false
++
++[lib]
++crate-type = ["cdylib"]
++
++[dependencies]
++godot = { version = "=0.5.5", features = ["api-4-4"] }
+--- /dev/null
++++ b/rust/src/lib.rs
+@@ -0,0 +1,31 @@
++//! First chapter where Rust participates in the Godot project.
++//! This is not yet the Snake game logic: it only proves the native bridge works.
++
++use godot::classes::{INode, Node};
++use godot::prelude::*;
++
++struct FirstExtension;
++
++#[gdextension]
++unsafe impl ExtensionLibrary for FirstExtension {}
++
++#[derive(GodotClass)]
++#[class(base=Node)]
++struct SnakeBridge {
++    base: Base<Node>,
++}
++
++#[godot_api]
++impl INode for SnakeBridge {
++    fn init(base: Base<Node>) -> Self {
++        Self { base }
++    }
++}
++
++#[godot_api]
++impl SnakeBridge {
++    #[func]
++    fn message(&self) -> GString {
++        "Hello from Rust!".into()
++    }
++}

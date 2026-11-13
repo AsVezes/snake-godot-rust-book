@@ -1,0 +1,394 @@
+--- a/godot/Board.gd
++++ b/godot/Board.gd
+@@ -1,5 +1,5 @@
+ extends Node2D
+-# Chapter 09: save one durable high score via Godot user://, not via Rust.
++# Chapter 10: keep text-file record; add completed-match history in Rust SQLite.
+-# The snake rules and the native bridge remain unchanged.
++# Snake movement rules remain unchanged; SnakeBridge adds SQLite methods.
+ # Input and drawing stay in Godot; rules remain in Rust Game.
+ 
+@@ -19,6 +19,10 @@
+ var best_score: int = 0
+ var completed_recorded: bool = false
+ var save_failed: bool = false
++var history_failed: bool = false
++var history_count: int = -1
++@export var history_path: String = "user://scores.db"
++@export var score_path: String = "user://snake_best_score.txt"
+ 
+ @onready var status_label: Label = $Status
+ @onready var help_label: Label = $Help
+@@ -26,7 +30,8 @@
+ func _ready() -> void:
+     bridge = SnakeBridge.new()
+     add_child(bridge)
+-    best_score = HighScoreStore.load_best()
++    best_score = HighScoreStore.load_best(score_path)
++    history_count = int(bridge.completed_match_count(_absolute_history_path()))
+     _restart()
+ 
+ func _restart() -> void:
+@@ -35,6 +40,7 @@
+     user_paused = false
+     completed_recorded = false
+     save_failed = false
++    history_failed = history_count < 0
+     elapsed = 0.0
+     _update_status()
+     queue_redraw()
+@@ -56,7 +62,12 @@
+     else:
+         status_label.text = ("Pontos: %d | Recorde: %d" if portuguese else "Score: %d | Best: %d") % [score, best_score]
+ 
+-    if save_failed:
++    if history_count >= 0:
++        status_label.text += (" | Partidas: %d" if portuguese else " | Matches: %d") % history_count
++
++    if history_failed:
++        help_label.text = "Histórico SQLite indisponível" if portuguese else "SQLite history unavailable"
++    elif save_failed:
+         help_label.text = "Falha ao salvar recorde" if portuguese else "Failed to save high score"
+     else:
+         help_label.text = (
+@@ -84,11 +95,20 @@
+         return
+     completed_recorded = true
+     var score: int = bridge.current_score()
++    if not bridge.record_completed_match(_absolute_history_path(), score, bridge.did_win()):
++        history_failed = true
++        push_warning("Could not save completed match to SQLite")
++    else:
++        history_count = int(bridge.completed_match_count(_absolute_history_path()))
++        history_failed = history_count < 0
+     if score > best_score:
+-        if HighScoreStore.save_if_higher(score):
+-            best_score = maxi(score, HighScoreStore.load_best())
++        if HighScoreStore.save_if_higher(score, score_path):
++            best_score = maxi(score, HighScoreStore.load_best(score_path))
+         else:
+             save_failed = true
++
++func _absolute_history_path() -> String:
++    return ProjectSettings.globalize_path(history_path)
+ 
+ func _notification(what: int) -> void:
+     match what:
+--- a/godot/SmokeTest.gd
++++ b/godot/SmokeTest.gd
+@@ -12,7 +12,7 @@
+     checks += 1
+     if not ok:
+         failures.append(description)
+-        push_error("CH09_FAIL: " + description)
++        push_error("CH10_FAIL: " + description)
+ 
+ func press(board: Node, keycode: Key) -> void:
+     var event: InputEventKey = InputEventKey.new()
+@@ -26,11 +26,22 @@
+ func _run() -> void:
+     var resource: PackedScene = load("res://Main.tscn") as PackedScene
+     if resource == null:
+-        push_error("CH09_FAIL: Main.tscn not loaded")
++        push_error("CH10_FAIL: Main.tscn not loaded")
+         quit(1)
+         return
+ 
++    # Isolate the database from the player's real data, BEFORE _ready.
++    var test_db: String = "user://checkpoint10_smoke_scores.db"
++    var native_db: String = ProjectSettings.globalize_path(test_db)
++    if FileAccess.file_exists(test_db):
++        DirAccess.remove_absolute(native_db)
++    var score_fixture: String = "user://checkpoint10_smoke_player_best.txt"
++    var score_fixture_native: String = ProjectSettings.globalize_path(score_fixture)
++    if FileAccess.file_exists(score_fixture):
++        DirAccess.remove_absolute(score_fixture_native)
+     var board: Node = resource.instantiate()
++    board.set("history_path", test_db)
++    board.set("score_path", score_fixture)
+     root.add_child(board)
+     var game: SnakeBridge = board.get("bridge") as SnakeBridge
+     check(game != null, "native SnakeBridge exists")
+@@ -50,6 +61,8 @@
+     check(not board.get("has_started"), "start waits for arrow")
+     check(status.text.contains("Press arrow to start") and status.text.contains("Best:"), "English start hint and persistent best score")
+     check(help.text.contains("Arrows:"), "initial English controls")
++    check(board.get("history_count") == 0, "fresh history empty")
++    check(status.text.contains("Matches: 0"), "English history label")
+     var start_head: Vector2i = game.snake_cells()[0]
+     tick(board, 1.0)
+     check(game.snake_cells()[0] == start_head, "no movement before first arrow")
+@@ -58,6 +71,7 @@
+     check(board.get("portuguese"), "language switched to Portuguese")
+     check(status.text.contains("Seta para iniciar") and status.text.contains("Recorde:"), "Portuguese start hint and persistent record")
+     check(help.text.contains("Setas:"), "Portuguese help")
++    check(status.text.contains("Partidas: 0"), "Portuguese history label")
+     press(board, KEY_P)
+     check(board.get("user_paused"), "P pauses")
+     press(board, KEY_UP)
+@@ -140,10 +154,47 @@
+         check(false, "fixture file opens for corruption test")
+     check(DirAccess.remove_absolute(absolute_path) == OK, "temporary high-score file removed")
+ 
++    check(game.record_completed_match(native_db, 3, false), "records a loss")
++    check(game.record_completed_match(native_db, 7, true), "records a win")
++    check(game.completed_match_count(native_db) == 2, "two matches saved")
++    check(not game.record_completed_match(native_db, -1, false), "rejects negative scores")
++    check(game.completed_match_count(native_db) == 2, "invalid input does not write")
++    var second_bridge: SnakeBridge = SnakeBridge.new()
++    root.add_child(second_bridge)
++    check(second_bridge.completed_match_count(native_db) == 2, "new connection sees saved rows")
++    second_bridge.queue_free()
++
++    press(board, KEY_R)
++    press(board, KEY_UP)
++    for i in range(16):
++        tick(board)
++    check(game.is_game_over(), "wall collision ends game")
++    check(game.completed_match_count(native_db) == 3, "Board records completed match")
++    board.call("_record_completion_once")
++    tick(board, 1.0)
++    check(game.completed_match_count(native_db) == 3, "later frames do not duplicate match")
++    check(board.get("history_count") == 3, "HUD count refreshes")
++
++    var bad_db: String = "user://checkpoint10_smoke_corrupt.db"
++    var bad_native: String = ProjectSettings.globalize_path(bad_db)
++    if FileAccess.file_exists(bad_db):
++        DirAccess.remove_absolute(bad_native)
++    var corrupt: FileAccess = FileAccess.open(bad_db, FileAccess.WRITE)
++    if corrupt != null:
++        corrupt.store_string("not a SQLite database")
++        corrupt.close()
++        check(game.completed_match_count(bad_native) == -1, "corrupt SQL file reported")
++        check(not game.record_completed_match(bad_native, 2, false), "corrupt SQL file not overwritten")
++        check(DirAccess.remove_absolute(bad_native) == OK, "corrupt SQL fixture removed")
++    else:
++        check(false, "corrupt SQL fixture can be created")
++    check(DirAccess.remove_absolute(native_db) == OK, "isolated SQL history removed")
++    if FileAccess.file_exists(score_fixture):
++        check(DirAccess.remove_absolute(score_fixture_native) == OK, "isolated high-score fixture removed")
+     board.queue_free()
+     if failures.is_empty():
+-        print("CHECKPOINT_09_SMOKE_OK: %d checks" % checks)
++        print("CHECKPOINT_10_SMOKE_OK: %d checks" % checks)
+         quit(0)
+     else:
+-        push_error("CHECKPOINT_09_SMOKE_FAILED: %d/%d" % [failures.size(), checks])
+-        quit(1)
++        push_error("CHECKPOINT_10_SMOKE_FAILED: %d/%d" % [failures.size(), checks])
++        quit(1)
+--- a/godot/Snake.gdextension
++++ b/godot/Snake.gdextension
+@@ -4,9 +4,9 @@
+ reloadable = false
+ 
+ [libraries]
+-linux.debug.x86_64 = "res://../rust/target/debug/librenda_snake_step9.so"
+-linux.release.x86_64 = "res://../rust/target/release/librenda_snake_step9.so"
+-windows.debug.x86_64 = "res://../rust/target/debug/renda_snake_step9.dll"
+-windows.release.x86_64 = "res://../rust/target/release/renda_snake_step9.dll"
+-macos.debug = "res://../rust/target/debug/librenda_snake_step9.dylib"
+-macos.release = "res://../rust/target/release/librenda_snake_step9.dylib"
++linux.debug.x86_64 = "res://../rust/target/debug/librenda_snake_step10.so"
++linux.release.x86_64 = "res://../rust/target/release/librenda_snake_step10.so"
++windows.debug.x86_64 = "res://../rust/target/debug/renda_snake_step10.dll"
++windows.release.x86_64 = "res://../rust/target/release/renda_snake_step10.dll"
++macos.debug = "res://../rust/target/debug/librenda_snake_step10.dylib"
++macos.release = "res://../rust/target/release/librenda_snake_step10.dylib"
+--- a/godot/project.godot
++++ b/godot/project.godot
+@@ -3,7 +3,7 @@
+ 
+ [application]
+ 
+-config/name="Snake - Chapter 9"
++config/name="Snake - Chapter 10"
+ run/main_scene="res://Main.tscn"
+ 
+ [display]
+--- a/rust/Cargo.toml
++++ b/rust/Cargo.toml
+@@ -1,5 +1,5 @@
+ [package]
+-name = "renda_snake_step9"
++name = "renda_snake_step10"
+ version = "0.1.0"
+ edition = "2021"
+ publish = false
+@@ -9,3 +9,4 @@
+ 
+ [dependencies]
+ godot = { version = "=0.5.5", features = ["api-4-4"] }
++rusqlite = { version = "=0.37.0", features = ["bundled"] }
+--- a/rust/src/lib.rs
++++ b/rust/src/lib.rs
+@@ -1,7 +1,10 @@
+-//! Checkpoint 06: a Godot node owns the pure Rust Game.
++//! Checkpoint 10: SnakeBridge adds SQLite history operations.
+ //! All rules still live in game.rs; this file converts Godot API types.
+ 
+ pub mod game;
++mod score_store;
++
++use score_store::ScoreStore;
+ 
+ use game::{Direction, Game, Phase};
+ use godot::classes::{INode, Node};
+@@ -93,6 +96,24 @@
+         self.game.phase() != Phase::Running
+     }
+ 
++    /// Called only when the Board sees a completed match.
++    #[func]
++    fn record_completed_match(&self, absolute_path: GString, score: i32, won: bool) -> bool {
++        let path = absolute_path.to_string();
++        ScoreStore::open(&path)
++            .and_then(|store| store.record_completed(score, won))
++            .is_ok()
++    }
++
++    /// -1 communicates a database failure without stopping gameplay.
++    #[func]
++    fn completed_match_count(&self, absolute_path: GString) -> i64 {
++        let path = absolute_path.to_string();
++        ScoreStore::open(&path)
++            .and_then(|store| store.count_matches())
++            .unwrap_or(-1)
++    }
++
+     #[func]
+     fn did_win(&self) -> bool {
+         self.game.phase() == Phase::Won
+--- /dev/null
++++ b/rust/src/score_store.rs
+@@ -0,0 +1,107 @@
++//! SQLite persistence is infrastructure, not part of the movement rules.
++//! Open connections for history operations, never for game ticks.
++
++use rusqlite::{params, Connection, Result};
++
++pub struct ScoreStore {
++    connection: Connection,
++}
++
++impl ScoreStore {
++    pub fn open(path: &str) -> Result<Self> {
++        Self::initialize(Connection::open(path)?)
++    }
++
++    fn initialize(connection: Connection) -> Result<Self> {
++        connection.execute_batch(
++            "CREATE TABLE IF NOT EXISTS matches (
++                id INTEGER PRIMARY KEY,
++                score INTEGER NOT NULL CHECK (score >= 0),
++                outcome TEXT NOT NULL CHECK (outcome IN ('lost', 'won')),
++                finished_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
++            );",
++        )?;
++        Ok(Self { connection })
++    }
++
++    pub fn record_completed(&self, score: i32, won: bool) -> Result<()> {
++        let outcome = if won { "won" } else { "lost" };
++        self.connection.execute(
++            "INSERT INTO matches (score, outcome) VALUES (?1, ?2)",
++            params![score, outcome],
++        )?;
++        Ok(())
++    }
++
++    pub fn count_matches(&self) -> Result<i64> {
++        self.connection
++            .query_row("SELECT COUNT(*) FROM matches", [], |row| row.get(0))
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    fn memory_store() -> ScoreStore {
++        ScoreStore::initialize(Connection::open_in_memory().unwrap()).unwrap()
++    }
++
++    #[test]
++    fn fresh_database_is_empty() {
++        assert_eq!(memory_store().count_matches().unwrap(), 0);
++    }
++
++    #[test]
++    fn stores_multiple_matches_and_outcomes() {
++        let store = memory_store();
++        store.record_completed(3, false).unwrap();
++        store.record_completed(7, true).unwrap();
++        assert_eq!(store.count_matches().unwrap(), 2);
++        let outcome: String = store
++            .connection
++            .query_row("SELECT outcome FROM matches WHERE score = ?1", [7], |row| {
++                row.get(0)
++            })
++            .unwrap();
++        assert_eq!(outcome, "won");
++    }
++
++    #[test]
++    fn rejects_negative_scores_without_inserting() {
++        let store = memory_store();
++        assert!(store.record_completed(-1, false).is_err());
++        assert_eq!(store.count_matches().unwrap(), 0);
++    }
++
++    #[test]
++    fn reopens_the_same_disk_database_with_history_intact() {
++        use std::time::{SystemTime, UNIX_EPOCH};
++        let nonce = SystemTime::now()
++            .duration_since(UNIX_EPOCH)
++            .unwrap()
++            .as_nanos();
++        let path = std::env::temp_dir().join(format!(
++            "renda-snake-ch10-{}-{nonce}.db",
++            std::process::id()
++        ));
++        let name = path.to_str().unwrap();
++        {
++            let store = ScoreStore::open(name).unwrap();
++            store.record_completed(9, true).unwrap();
++        }
++        {
++            let reopened = ScoreStore::open(name).unwrap();
++            assert_eq!(reopened.count_matches().unwrap(), 1);
++        }
++        std::fs::remove_file(path).unwrap();
++    }
++
++    #[test]
++    fn invalid_parent_directory_is_reported() {
++        let path = std::env::temp_dir()
++            .join(format!("renda-snake-ch10-missing-{}", std::process::id()))
++            .join("history.db");
++        assert!(ScoreStore::open(path.to_str().unwrap()).is_err());
++    }
++}
+--- a/tools/run_checks.py
++++ b/tools/run_checks.py
+@@ -1,4 +1,4 @@
+-"""Run checkpoint 08's Rust/Godot checks without invoking a shell.
++"""Run checkpoint 10's Rust/Godot checks without invoking a shell.
+ 
+ Run from any directory: python3 tools/run_checks.py
+ """
+@@ -59,12 +59,12 @@
+         if result.returncode != 0:
+             print(f"FAIL exit {result.returncode}: {step.name}", file=sys.stderr)
+             return result.returncode
+-    print("CHECKPOINT_09_CHECKS_OK: all selected tools completed successfully")
++    print("CHECKPOINT_10_CHECKS_OK: all selected tools completed successfully")
+     return 0
+ 
+ 
+ def main(argv: list[str] | None = None) -> int:
+-    parser = argparse.ArgumentParser(description="Run Rust and Godot verification for teaching checkpoint 08")
++    parser = argparse.ArgumentParser(description="Run Rust and Godot verification for teaching checkpoint 10")
+     parser.add_argument("--godot-executable", default="godot", help="Path or command name for the Godot editor")
+     parser.add_argument("--rust-only", action="store_true", help="Skip Godot checks (not a complete validation)")
+     parser.add_argument("--timeout-seconds", type=float, default=180.0, help="Maximum seconds per external command")

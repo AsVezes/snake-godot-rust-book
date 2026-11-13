@@ -1,0 +1,407 @@
+--- a/godot/Board.gd
++++ b/godot/Board.gd
+@@ -1,5 +1,5 @@
+ extends Node2D
+-# Chapter 10: keep text-file record; add completed-match history in Rust SQLite.
++# Chapter 11: retain record and SQLite history; display the ten best scores.
+-# Snake movement rules remain unchanged; SnakeBridge adds SQLite methods.
++# Snake movement rules remain unchanged; SnakeBridge also exposes ranking queries.
+ # Input and drawing stay in Godot; rules remain in Rust Game.
+ 
+@@ -21,6 +21,9 @@
+ var save_failed: bool = false
+ var history_failed: bool = false
+ var history_count: int = -1
++var ranking_visible: bool = false
++var ranking_panel: Panel
++var ranking_label: Label
+ @export var history_path: String = "user://scores.db"
+ @export var score_path: String = "user://snake_best_score.txt"
+ 
+@@ -32,6 +35,7 @@
+     add_child(bridge)
+     best_score = HighScoreStore.load_best(score_path)
+     history_count = int(bridge.completed_match_count(_absolute_history_path()))
++    _build_ranking_panel()
+     _restart()
+ 
+ func _restart() -> void:
+@@ -39,6 +43,9 @@
+     has_started = false
+     user_paused = false
+     completed_recorded = false
++    ranking_visible = false
++    if ranking_panel != null:
++        ranking_panel.visible = false
+     save_failed = false
+     history_failed = history_count < 0
+     elapsed = 0.0
+@@ -65,7 +72,9 @@
+     if history_count >= 0:
+         status_label.text += (" | Partidas: %d" if portuguese else " | Matches: %d") % history_count
+ 
+-    if history_failed:
++    if ranking_visible:
++        help_label.text = "H: fechar ranking | L: idioma" if portuguese else "H: close ranking | L: language"
++    elif history_failed:
+         help_label.text = "Histórico SQLite indisponível" if portuguese else "SQLite history unavailable"
+     elif save_failed:
+         help_label.text = "Falha ao salvar recorde" if portuguese else "Failed to save high score"
+@@ -77,7 +86,7 @@
+         )
+ 
+ func _process(delta: float) -> void:
+-    if bridge == null or not has_started or user_paused or focus_paused or bridge.is_game_over():
++    if bridge == null or not has_started or user_paused or focus_paused or ranking_visible or bridge.is_game_over():
+         return
+     # Do not catch up a long pause with many unintended logical ticks.
+     elapsed += minf(delta, STEP_SECONDS)
+@@ -106,6 +115,47 @@
+             best_score = maxi(score, HighScoreStore.load_best(score_path))
+         else:
+             save_failed = true
++
++func _build_ranking_panel() -> void:
++    # The panel is a presentation-only node, not part of the Rust Game.
++    ranking_panel = Panel.new()
++    ranking_panel.name = "RankingPanel"
++    ranking_panel.position = Vector2(116, 16)
++    ranking_panel.size = Vector2(280, 356)
++    ranking_panel.visible = false
++    add_child(ranking_panel)
++    ranking_label = Label.new()
++    ranking_label.name = "RankingText"
++    ranking_label.position = Vector2(16, 12)
++    ranking_label.size = Vector2(248, 326)
++    ranking_panel.add_child(ranking_label)
++
++func _refresh_ranking() -> void:
++    var lines: PackedStringArray = PackedStringArray()
++    lines.append("DEZ MELHORES" if portuguese else "TOP TEN SCORES")
++    lines.append("")
++    # [] means zero completed matches; [-1] is a SQLite query error.
++    # The Rust schema forbids negative persisted scores.
++    var scores: Array = bridge.top_ten_scores(_absolute_history_path())
++    if scores.size() == 1 and int(scores[0]) == -1:
++        history_failed = true
++        lines.append("Histórico indisponível" if portuguese else "History unavailable")
++    elif scores.is_empty():
++        lines.append("Nenhuma partida concluída" if portuguese else "No completed matches")
++    else:
++        for index in range(scores.size()):
++            lines.append("%d. %d" % [index + 1, scores[index]])
++    lines.append("")
++    lines.append("H: fechar" if portuguese else "H: close")
++    ranking_label.text = "\n".join(lines)
++
++func _toggle_ranking() -> void:
++    ranking_visible = not ranking_visible
++    ranking_panel.visible = ranking_visible
++    elapsed = 0.0
++    if ranking_visible:
++        _refresh_ranking()
++    _update_status()
+ 
+ func _absolute_history_path() -> String:
+     return ProjectSettings.globalize_path(history_path)
+@@ -132,6 +182,8 @@
+     match event.keycode:
+         KEY_R:
+             _restart()
++        KEY_H:
++            _toggle_ranking()
+         KEY_P, KEY_SPACE:
+             if bridge != null and not bridge.is_game_over():
+                 user_paused = not user_paused
+@@ -140,6 +192,8 @@
+                 queue_redraw()
+         KEY_L:
+             portuguese = not portuguese
++            if ranking_visible:
++                _refresh_ranking()
+             _update_status()
+         KEY_UP:
+             if _can_turn():
+@@ -159,7 +213,7 @@
+                 bridge.turn_left()
+ 
+ func _can_turn() -> bool:
+-    return bridge != null and not user_paused and not focus_paused and not bridge.is_game_over()
++    return bridge != null and not user_paused and not focus_paused and not ranking_visible and not bridge.is_game_over()
+ 
+ func _begin_if_waiting() -> void:
+     if not has_started:
+--- a/godot/SmokeTest.gd
++++ b/godot/SmokeTest.gd
+@@ -12,7 +12,7 @@
+     checks += 1
+     if not ok:
+         failures.append(description)
+-        push_error("CH10_FAIL: " + description)
++        push_error("CH11_FAIL: " + description)
+ 
+ func press(board: Node, keycode: Key) -> void:
+     var event: InputEventKey = InputEventKey.new()
+@@ -26,16 +26,16 @@
+ func _run() -> void:
+     var resource: PackedScene = load("res://Main.tscn") as PackedScene
+     if resource == null:
+-        push_error("CH10_FAIL: Main.tscn not loaded")
++        push_error("CH11_FAIL: Main.tscn not loaded")
+         quit(1)
+         return
+ 
+     # Isolate the database from the player's real data, BEFORE _ready.
+-    var test_db: String = "user://checkpoint10_smoke_scores.db"
++    var test_db: String = "user://checkpoint11_smoke_scores.db"
+     var native_db: String = ProjectSettings.globalize_path(test_db)
+     if FileAccess.file_exists(test_db):
+         DirAccess.remove_absolute(native_db)
+-    var score_fixture: String = "user://checkpoint10_smoke_player_best.txt"
++    var score_fixture: String = "user://checkpoint11_smoke_player_best.txt"
+     var score_fixture_native: String = ProjectSettings.globalize_path(score_fixture)
+     if FileAccess.file_exists(score_fixture):
+         DirAccess.remove_absolute(score_fixture_native)
+@@ -62,6 +62,7 @@
+     check(status.text.contains("Press arrow to start") and status.text.contains("Best:"), "English start hint and persistent best score")
+     check(help.text.contains("Arrows:"), "initial English controls")
+     check(board.get("history_count") == 0, "fresh history empty")
++    check(game.top_ten_scores(native_db).is_empty(), "fresh empty ranking succeeds")
+     check(status.text.contains("Matches: 0"), "English history label")
+     var start_head: Vector2i = game.snake_cells()[0]
+     tick(board, 1.0)
+@@ -133,7 +134,7 @@
+     check(status.text.contains("Score: 1"), "HUD reports score after eating")
+ 
+     # Use a separate temporary path: never change the player's real record.
+-    var test_path: String = "user://checkpoint09_smoke_record.txt"
++    var test_path: String = "user://checkpoint11_smoke_record.txt"
+     var absolute_path: String = ProjectSettings.globalize_path(test_path)
+     if FileAccess.file_exists(test_path):
+         DirAccess.remove_absolute(absolute_path)
+@@ -159,6 +160,27 @@
+     check(game.completed_match_count(native_db) == 2, "two matches saved")
+     check(not game.record_completed_match(native_db, -1, false), "rejects negative scores")
+     check(game.completed_match_count(native_db) == 2, "invalid input does not write")
++    var top_two: Array = game.top_ten_scores(native_db)
++    check(top_two.size() == 2, "ranking includes the two stored matches")
++    if top_two.size() == 2:
++        check(top_two[0] == 7 and top_two[1] == 3, "ranking sorts scores descending")
++
++    var rank_panel: Panel = board.get_node_or_null("RankingPanel") as Panel
++    var rank_text: Label = board.get_node_or_null("RankingPanel/RankingText") as Label
++    check(rank_panel != null and rank_text != null, "ranking panel exists")
++    if rank_panel != null and rank_text != null:
++        check(not rank_panel.visible, "ranking is hidden by default")
++        press(board, KEY_H)
++        check(board.get("ranking_visible") and rank_panel.visible, "H opens the ranking")
++        check(rank_text.text.contains("1. 7") and rank_text.text.contains("2. 3"), "ranked scores are visible")
++        var held_head: Vector2i = game.snake_cells()[0]
++        tick(board, 1.0)
++        check(game.snake_cells()[0] == held_head, "ranking blocks movement")
++        press(board, KEY_L)
++        check(rank_text.text.contains("DEZ MELHORES"), "ranking heading translated")
++        press(board, KEY_L)
++        press(board, KEY_H)
++        check(not rank_panel.visible and not board.get("ranking_visible"), "H closes ranking")
+     var second_bridge: SnakeBridge = SnakeBridge.new()
+     root.add_child(second_bridge)
+     check(second_bridge.completed_match_count(native_db) == 2, "new connection sees saved rows")
+@@ -174,8 +196,11 @@
+     tick(board, 1.0)
+     check(game.completed_match_count(native_db) == 3, "later frames do not duplicate match")
+     check(board.get("history_count") == 3, "HUD count refreshes")
+-
+-    var bad_db: String = "user://checkpoint10_smoke_corrupt.db"
++    var latest_rank: Array = game.top_ten_scores(native_db)
++    check(latest_rank.size() == 3, "completed match appears in ranking")
++    check(latest_rank[0] == 7, "leading score still first")
++
++    var bad_db: String = "user://checkpoint11_smoke_corrupt.db"
+     var bad_native: String = ProjectSettings.globalize_path(bad_db)
+     if FileAccess.file_exists(bad_db):
+         DirAccess.remove_absolute(bad_native)
+@@ -184,6 +209,23 @@
+         corrupt.store_string("not a SQLite database")
+         corrupt.close()
+         check(game.completed_match_count(bad_native) == -1, "corrupt SQL file reported")
++        var bad_scores: Array = game.top_ten_scores(bad_native)
++        check(bad_scores.size() == 1 and bad_scores[0] == -1, "ranking failure marker is not an empty result")
++        board.set("history_path", bad_db)
++        press(board, KEY_H)
++        var error_label: Label = board.get_node_or_null("RankingPanel/RankingText") as Label
++        check(error_label != null, "ranking panel label survives SQLite error")
++        if error_label != null:
++            check(
++                error_label.text.contains("History unavailable") or error_label.text.contains("Histórico indisponível"),
++                "ranking displays a database error"
++            )
++            check(
++                not error_label.text.contains("No completed matches") and not error_label.text.contains("Nenhuma partida concluída"),
++                "ranking error is never displayed as zero completed matches"
++            )
++        press(board, KEY_H)
++        board.set("history_path", test_db)
+         check(not game.record_completed_match(bad_native, 2, false), "corrupt SQL file not overwritten")
+         check(DirAccess.remove_absolute(bad_native) == OK, "corrupt SQL fixture removed")
+     else:
+@@ -193,8 +235,8 @@
+         check(DirAccess.remove_absolute(score_fixture_native) == OK, "isolated high-score fixture removed")
+     board.queue_free()
+     if failures.is_empty():
+-        print("CHECKPOINT_10_SMOKE_OK: %d checks" % checks)
++        print("CHECKPOINT_11_SMOKE_OK: %d checks" % checks)
+         quit(0)
+     else:
+-        push_error("CHECKPOINT_10_SMOKE_FAILED: %d/%d" % [failures.size(), checks])
+-        quit(1)
++        push_error("CHECKPOINT_11_SMOKE_FAILED: %d/%d" % [failures.size(), checks])
++        quit(1)
+--- a/godot/Snake.gdextension
++++ b/godot/Snake.gdextension
+@@ -4,9 +4,9 @@
+ reloadable = false
+ 
+ [libraries]
+-linux.debug.x86_64 = "res://../rust/target/debug/librenda_snake_step10.so"
+-linux.release.x86_64 = "res://../rust/target/release/librenda_snake_step10.so"
+-windows.debug.x86_64 = "res://../rust/target/debug/renda_snake_step10.dll"
+-windows.release.x86_64 = "res://../rust/target/release/renda_snake_step10.dll"
+-macos.debug = "res://../rust/target/debug/librenda_snake_step10.dylib"
+-macos.release = "res://../rust/target/release/librenda_snake_step10.dylib"
++linux.debug.x86_64 = "res://../rust/target/debug/librenda_snake_step11.so"
++linux.release.x86_64 = "res://../rust/target/release/librenda_snake_step11.so"
++windows.debug.x86_64 = "res://../rust/target/debug/renda_snake_step11.dll"
++windows.release.x86_64 = "res://../rust/target/release/renda_snake_step11.dll"
++macos.debug = "res://../rust/target/debug/librenda_snake_step11.dylib"
++macos.release = "res://../rust/target/release/librenda_snake_step11.dylib"
+--- a/godot/project.godot
++++ b/godot/project.godot
+@@ -3,7 +3,7 @@
+ 
+ [application]
+ 
+-config/name="Snake - Chapter 10"
++config/name="Snake - Chapter 11"
+ run/main_scene="res://Main.tscn"
+ 
+ [display]
+--- a/rust/Cargo.toml
++++ b/rust/Cargo.toml
+@@ -1,5 +1,5 @@
+ [package]
+-name = "renda_snake_step10"
++name = "renda_snake_step11"
+ version = "0.1.0"
+ edition = "2021"
+ publish = false
+--- a/rust/src/lib.rs
++++ b/rust/src/lib.rs
+@@ -1,4 +1,4 @@
+-//! Checkpoint 10: SnakeBridge adds SQLite history operations.
++//! Checkpoint 11: SnakeBridge can query a top-ten ranking without changing Game.
+ //! All rules still live in game.rs; this file converts Godot API types.
+ 
+ pub mod game;
+@@ -114,6 +114,24 @@
+             .unwrap_or(-1)
+     }
+ 
++    /// Contract: [] is an empty ranking; [-1] means a query failure.
++    /// Valid scores are nonnegative (matches.score CHECK constraint).
++    #[func]
++    fn top_ten_scores(&self, absolute_path: GString) -> Array<i64> {
++        let mut result = Array::new();
++        let query =
++            ScoreStore::open(&absolute_path.to_string()).and_then(|store| store.top_ten_scores());
++        match query {
++            Ok(scores) => {
++                for score in scores {
++                    result.push(score);
++                }
++            }
++            Err(_) => result.push(-1),
++        }
++        result
++    }
++
+     #[func]
+     fn did_win(&self) -> bool {
+         self.game.phase() == Phase::Won
+--- a/rust/src/score_store.rs
++++ b/rust/src/score_store.rs
+@@ -36,6 +36,16 @@
+     pub fn count_matches(&self) -> Result<i64> {
+         self.connection
+             .query_row("SELECT COUNT(*) FROM matches", [], |row| row.get(0))
++    }
++
++    /// Highest scores first; insertion order resolves score ties consistently.
++    /// The SQL LIMIT prevents loading the full history into the game UI.
++    pub fn top_ten_scores(&self) -> Result<Vec<i64>> {
++        let mut statement = self
++            .connection
++            .prepare("SELECT score FROM matches ORDER BY score DESC, id ASC LIMIT 10")?;
++        let scores = statement.query_map([], |row| row.get::<_, i64>(0))?;
++        scores.collect()
+     }
+ }
+ 
+@@ -98,6 +108,34 @@
+     }
+ 
+     #[test]
++    fn ranking_is_empty_before_first_completed_match() {
++        let store = memory_store();
++        assert!(store.top_ten_scores().unwrap().is_empty());
++    }
++
++    #[test]
++    fn ranking_sorts_descending_and_limits_to_ten() {
++        let store = memory_store();
++        for score in [2, 9, 1, 5, 9, 3, 10, 7, 8, 4, 6, 0] {
++            store.record_completed(score, false).unwrap();
++        }
++        assert_eq!(
++            store.top_ten_scores().unwrap(),
++            vec![10, 9, 9, 8, 7, 6, 5, 4, 3, 2]
++        );
++        assert_eq!(store.count_matches().unwrap(), 12);
++    }
++
++    #[test]
++    fn ranking_is_read_only() {
++        let store = memory_store();
++        store.record_completed(6, true).unwrap();
++        assert_eq!(store.top_ten_scores().unwrap(), vec![6]);
++        assert_eq!(store.top_ten_scores().unwrap(), vec![6]);
++        assert_eq!(store.count_matches().unwrap(), 1);
++    }
++
++    #[test]
+     fn invalid_parent_directory_is_reported() {
+         let path = std::env::temp_dir()
+             .join(format!("renda-snake-ch10-missing-{}", std::process::id()))
+--- a/tools/run_checks.py
++++ b/tools/run_checks.py
+@@ -1,4 +1,4 @@
+-"""Run checkpoint 10's Rust/Godot checks without invoking a shell.
++"""Run checkpoint 11's Rust/Godot checks without invoking a shell.
+ 
+ Run from any directory: python3 tools/run_checks.py
+ """
+@@ -59,12 +59,12 @@
+         if result.returncode != 0:
+             print(f"FAIL exit {result.returncode}: {step.name}", file=sys.stderr)
+             return result.returncode
+-    print("CHECKPOINT_10_CHECKS_OK: all selected tools completed successfully")
++    print("CHECKPOINT_11_CHECKS_OK: all selected tools completed successfully")
+     return 0
+ 
+ 
+ def main(argv: list[str] | None = None) -> int:
+-    parser = argparse.ArgumentParser(description="Run Rust and Godot verification for teaching checkpoint 10")
++    parser = argparse.ArgumentParser(description="Run Rust and Godot verification for teaching checkpoint 11")
+     parser.add_argument("--godot-executable", default="godot", help="Path or command name for the Godot editor")
+     parser.add_argument("--rust-only", action="store_true", help="Skip Godot checks (not a complete validation)")
+     parser.add_argument("--timeout-seconds", type=float, default=180.0, help="Maximum seconds per external command")

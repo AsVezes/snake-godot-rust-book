@@ -1,0 +1,353 @@
+--- a/godot/Board.gd
++++ b/godot/Board.gd
+@@ -1,12 +1,14 @@
+ extends Node2D
+-# Checkpoint 05: Godot renders the snake and food; Rust supplies positions.
+-# The objects are intentionally static until we introduce Game::tick.
++# Chapter 06: arrows control the actual Rust Game. No pause/locale yet.
+ 
+ const CELL_SIZE: int = 32
+ const BOARD_COLUMNS: int = 16
+ const BOARD_ROWS: int = 12
++const STEP_SECONDS: float = 0.16
+ 
+ var bridge: SnakeBridge
++var elapsed: float = 0.0
++var has_started: bool = false
+ 
+ @onready var status_label: Label = $Status
+ @onready var help_label: Label = $Help
+@@ -14,26 +16,82 @@
+ func _ready() -> void:
+     bridge = SnakeBridge.new()
+     add_child(bridge)
+-    status_label.text = "Score: %d" % bridge.current_score()
+-    help_label.text = bridge.message()
++    _restart()
++
++func _restart() -> void:
++    bridge.reset_game()
++    has_started = false
++    elapsed = 0.0
++    _update_status()
+     queue_redraw()
+ 
++func _update_status() -> void:
++    if bridge.did_win():
++        status_label.text = "You won! Score: %d" % bridge.current_score()
++    elif bridge.is_game_over():
++        status_label.text = "Game over! Score: %d" % bridge.current_score()
++    elif not has_started:
++        status_label.text = "Press an arrow to start"
++    else:
++        status_label.text = "Score: %d" % bridge.current_score()
++    help_label.text = bridge.message()
++
++func _process(delta: float) -> void:
++    if not has_started or bridge.is_game_over():
++        return
++    # Do not catch up a long pause with many unintended logical ticks.
++    elapsed += minf(delta, STEP_SECONDS)
++    if elapsed >= STEP_SECONDS:
++        elapsed -= STEP_SECONDS
++        bridge.advance_game()
++        _update_status()
++        queue_redraw()
++
++func _unhandled_key_input(event: InputEvent) -> void:
++    if not event is InputEventKey or not event.pressed or event.echo:
++        return
++
++    match event.keycode:
++        KEY_R:
++            _restart()
++        KEY_UP:
++            if not bridge.is_game_over():
++                bridge.turn_up()
++                _begin_if_waiting()
++        KEY_DOWN:
++            if not bridge.is_game_over():
++                bridge.turn_down()
++                _begin_if_waiting()
++        KEY_RIGHT:
++            if not bridge.is_game_over():
++                bridge.turn_right()
++                _begin_if_waiting()
++        KEY_LEFT:
++            # Initial reversal from Right to Left is forbidden by the rules.
++            if has_started and not bridge.is_game_over():
++                bridge.turn_left()
++
++func _begin_if_waiting() -> void:
++    if not has_started:
++        has_started = true
++        elapsed = 0.0
++        _update_status()
++
+ func _draw() -> void:
+-    var board_width: float = BOARD_COLUMNS * CELL_SIZE
+-    var board_height: float = BOARD_ROWS * CELL_SIZE
++    var board_width: float = float(BOARD_COLUMNS * CELL_SIZE)
++    var board_height: float = float(BOARD_ROWS * CELL_SIZE)
+     draw_rect(
+         Rect2(0, 0, board_width, board_height),
+         Color(0.09, 0.12, 0.17), true
+     )
+-
+     for column in range(1, BOARD_COLUMNS):
+-        var x: float = column * CELL_SIZE
++        var x: float = float(column * CELL_SIZE)
+         draw_line(
+             Vector2(x, 0), Vector2(x, board_height),
+             Color(0.3, 0.4, 0.5), 1.0
+         )
+     for row in range(1, BOARD_ROWS):
+-        var y: float = row * CELL_SIZE
++        var y: float = float(row * CELL_SIZE)
+         draw_line(
+             Vector2(0, y), Vector2(board_width, y),
+             Color(0.3, 0.4, 0.5), 1.0
+@@ -42,7 +100,6 @@
+     if bridge == null:
+         return
+ 
+-    # The native bridge returns a typed collection of logical cell coordinates.
+     var cells: Array[Vector2i] = bridge.snake_cells()
+     for i in range(cells.size()):
+         var cell: Vector2i = cells[i]
+@@ -60,8 +117,12 @@
+         )
+ 
+     var food: Vector2i = bridge.food_cell()
+-    var food_center: Vector2 = Vector2(
+-        (food.x + 0.5) * CELL_SIZE,
+-        (food.y + 0.5) * CELL_SIZE
+-    )
+-    draw_circle(food_center, CELL_SIZE * 0.32, Color(0.95, 0.31, 0.29))
++    if food.x >= 0 and food.y >= 0:
++        var food_center: Vector2 = Vector2(
++            (food.x + 0.5) * CELL_SIZE,
++            (food.y + 0.5) * CELL_SIZE
++        )
++        draw_circle(
++            food_center, CELL_SIZE * 0.32,
++            Color(0.95, 0.31, 0.29)
++        )
+--- a/godot/Main.tscn
++++ b/godot/Main.tscn
+@@ -17,4 +17,4 @@
+ offset_top = 423.0
+ offset_right = 632.0
+ offset_bottom = 465.0
+-text = "Chapter 5: Rust domain rules"
++text = "Chapter 6: integrated movement"
+--- /dev/null
++++ b/godot/SmokeTest.gd
+@@ -0,0 +1,57 @@
++extends SceneTree
++# Run after building Rust and importing the checkpoint Godot project:
++# godot --headless --path godot --script res://SmokeTest.gd
++
++var failures: Array[String] = []
++
++func _init() -> void:
++    call_deferred("_check_game")
++
++func check(condition: bool, description: String) -> void:
++    if not condition:
++        failures.append(description)
++        push_error("CH06_FAIL: " + description)
++
++func _check_game() -> void:
++    var scene: PackedScene = load("res://Main.tscn") as PackedScene
++    if scene == null:
++        push_error("CH06_FAIL: scene missing")
++        quit(1)
++        return
++    var board: Node = scene.instantiate()
++    root.add_child(board)
++
++    var game: SnakeBridge = board.get("bridge") as SnakeBridge
++    check(game != null, "Native SnakeBridge should be instantiated")
++    if game == null:
++        quit(1)
++        return
++    check(game.snake_cells().size() == 3, "Start with 3 segments")
++    check(game.food_cell() == Vector2i(11, 6), "Initial food")
++
++    var head: Vector2i = game.snake_cells()[0]
++    board.call("_process", 1.0)
++    check(game.snake_cells()[0] == head, "Wait for user to start")
++
++    var key: InputEventKey = InputEventKey.new()
++    key.keycode = KEY_RIGHT
++    key.pressed = true
++    board.call("_unhandled_key_input", key)
++    for i in range(3):
++        board.call("_process", 0.16)
++    check(game.current_score() == 1, "Score after first food")
++    check(game.snake_cells().size() == 4, "Growth")
++
++    var restart: InputEventKey = InputEventKey.new()
++    restart.keycode = KEY_R
++    restart.pressed = true
++    board.call("_unhandled_key_input", restart)
++    check(game.current_score() == 0, "Restart clears score")
++    check(not board.get("has_started"), "Restart waits for input")
++
++    board.queue_free()
++    if failures.is_empty():
++        print("CHECKPOINT_06_SMOKE_OK")
++        quit(0)
++    else:
++        quit(1)
+--- a/godot/Snake.gdextension
++++ b/godot/Snake.gdextension
+@@ -4,9 +4,9 @@
+ reloadable = false
+ 
+ [libraries]
+-linux.debug.x86_64 = "res://../rust/target/debug/librenda_snake_step5.so"
+-linux.release.x86_64 = "res://../rust/target/release/librenda_snake_step5.so"
+-windows.debug.x86_64 = "res://../rust/target/debug/renda_snake_step5.dll"
+-windows.release.x86_64 = "res://../rust/target/release/renda_snake_step5.dll"
+-macos.debug = "res://../rust/target/debug/librenda_snake_step5.dylib"
+-macos.release = "res://../rust/target/release/librenda_snake_step5.dylib"
++linux.debug.x86_64 = "res://../rust/target/debug/librenda_snake_step6.so"
++linux.release.x86_64 = "res://../rust/target/release/librenda_snake_step6.so"
++windows.debug.x86_64 = "res://../rust/target/debug/renda_snake_step6.dll"
++windows.release.x86_64 = "res://../rust/target/release/renda_snake_step6.dll"
++macos.debug = "res://../rust/target/debug/librenda_snake_step6.dylib"
++macos.release = "res://../rust/target/release/librenda_snake_step6.dylib"
+--- a/godot/project.godot
++++ b/godot/project.godot
+@@ -3,7 +3,7 @@
+ 
+ [application]
+ 
+-config/name="Snake - Chapter 5"
++config/name="Snake - Chapter 6"
+ run/main_scene="res://Main.tscn"
+ 
+ [display]
+--- a/rust/Cargo.toml
++++ b/rust/Cargo.toml
+@@ -1,5 +1,5 @@
+ [package]
+-name = "renda_snake_step5"
++name = "renda_snake_step6"
+ version = "0.1.0"
+ edition = "2021"
+ publish = false
+--- a/rust/src/lib.rs
++++ b/rust/src/lib.rs
+@@ -1,8 +1,9 @@
+-//! Checkpoint 05: pure Rust game rules are introduced separately.
+-//! The Godot bridge deliberately still shows fixed positions.
++//! Checkpoint 06: a Godot node owns the pure Rust Game.
++//! All rules still live in game.rs; this file converts Godot API types.
+ 
+ pub mod game;
+ 
++use game::{Direction, Game, Phase};
+ use godot::classes::{INode, Node};
+ use godot::prelude::*;
+ 
+@@ -14,13 +15,17 @@
+ #[derive(GodotClass)]
+ #[class(base=Node)]
+ struct SnakeBridge {
++    game: Game,
+     base: Base<Node>,
+ }
+ 
+ #[godot_api]
+ impl INode for SnakeBridge {
+     fn init(base: Base<Node>) -> Self {
+-        Self { base }
++        Self {
++            game: Game::new(16, 12),
++            base,
++        }
+     }
+ }
+ 
+@@ -28,25 +33,68 @@
+ impl SnakeBridge {
+     #[func]
+     fn message(&self) -> GString {
+-        "Chapter 5: rules tested in Rust".into()
++        "Arrows: move | R: restart".into()
++    }
++
++    #[func]
++    fn reset_game(&mut self) {
++        self.game.reset();
++    }
++
++    #[func]
++    fn advance_game(&mut self) {
++        self.game.tick();
++    }
++
++    #[func]
++    fn turn_up(&mut self) {
++        self.game.turn(Direction::Up);
++    }
++
++    #[func]
++    fn turn_down(&mut self) {
++        self.game.turn(Direction::Down);
++    }
++
++    #[func]
++    fn turn_left(&mut self) {
++        self.game.turn(Direction::Left);
++    }
++
++    #[func]
++    fn turn_right(&mut self) {
++        self.game.turn(Direction::Right);
++    }
++
++    #[func]
++    fn snake_cells(&self) -> Array<Vector2i> {
++        let mut result = Array::new();
++        for cell in self.game.segments() {
++            result.push(Vector2i::new(cell.x, cell.y));
++        }
++        result
++    }
++
++    #[func]
++    fn food_cell(&self) -> Vector2i {
++        match self.game.food() {
++            Some(cell) => Vector2i::new(cell.x, cell.y),
++            None => Vector2i::new(-1, -1),
++        }
+     }
+ 
+     #[func]
+     fn current_score(&self) -> i32 {
+-        0
++        self.game.score() as i32
+     }
+ 
+     #[func]
+-    fn snake_cells(&self) -> Array<Vector2i> {
+-        let mut cells = Array::new();
+-        cells.push(Vector2i::new(8, 6));
+-        cells.push(Vector2i::new(7, 6));
+-        cells.push(Vector2i::new(6, 6));
+-        cells
++    fn is_game_over(&self) -> bool {
++        self.game.phase() != Phase::Running
+     }
+ 
+     #[func]
+-    fn food_cell(&self) -> Vector2i {
+-        Vector2i::new(11, 6)
++    fn did_win(&self) -> bool {
++        self.game.phase() == Phase::Won
+     }
+ }
