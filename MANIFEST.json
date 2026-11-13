@@ -1,0 +1,1079 @@
+{
+  "schema": "snake-ptbr-public-code-inventory-v1",
+  "book": "Godot 4 + Rust: construa um Snake 2D passo a passo",
+  "author": "Elliot Veyran",
+  "publisher": "As Vezes",
+  "source_revision": "39fdbfe4754dc05edd9409831802feb48c1d5acf",
+  "source_count": 213,
+  "checkpoint_count": 16,
+  "patch_count": 6,
+  "hash_method": "git blob SHA-1 over 'blob {byte_length}\\0' followed by content; Git object identity, not a release signature",
+  "license": "LICENSE.txt",
+  "files": [
+    {
+      "path": "codigo/checkpoints/01-cenas-e-nos/godot/Main.tscn",
+      "git_blob_sha1": "aa0013b7ed9986d378091ff62bf33b55bdf6cd77",
+      "bytes": 360
+    },
+    {
+      "path": "codigo/checkpoints/01-cenas-e-nos/godot/project.godot",
+      "git_blob_sha1": "c69840716b958bd9b97024bc42a7541bf6e5a3f8",
+      "bytes": 341
+    },
+    {
+      "path": "codigo/checkpoints/01-cenas-e-nos/README.md",
+      "git_blob_sha1": "2ed630d26fe4a13d0271b99575fa154caa212627",
+      "bytes": 417
+    },
+    {
+      "path": "codigo/checkpoints/02-ciclo-e-grade/godot/Board.gd",
+      "git_blob_sha1": "8c1e95552d147e33424e023988e65d7aa705be5b",
+      "bytes": 1036
+    },
+    {
+      "path": "codigo/checkpoints/02-ciclo-e-grade/godot/Main.tscn",
+      "git_blob_sha1": "c14b78bfb7f2be20c8a0f73ecbb44613f90f0ae9",
+      "bytes": 479
+    },
+    {
+      "path": "codigo/checkpoints/02-ciclo-e-grade/godot/project.godot",
+      "git_blob_sha1": "f9076d545c0dda0a23a4804802c443d9dedf98f9",
+      "bytes": 341
+    },
+    {
+      "path": "codigo/checkpoints/02-ciclo-e-grade/README.md",
+      "git_blob_sha1": "6994f8514573ec47455a7484255b237c2289a965",
+      "bytes": 419
+    },
+    {
+      "path": "codigo/checkpoints/03-primeira-gdextension/godot/.godot/extension_list.cfg",
+      "git_blob_sha1": "6b61c54440dce019a8eb45589f3321d3715190a9",
+      "bytes": 24
+    },
+    {
+      "path": "codigo/checkpoints/03-primeira-gdextension/godot/Board.gd",
+      "git_blob_sha1": "57d8978e8159f036ded80d215d3b4ac4b49a25db",
+      "bytes": 886
+    },
+    {
+      "path": "codigo/checkpoints/03-primeira-gdextension/godot/Main.tscn",
+      "git_blob_sha1": "34cd8be4d1ec8fe3d64f60e7bf931e5cb9878977",
+      "bytes": 476
+    },
+    {
+      "path": "codigo/checkpoints/03-primeira-gdextension/godot/project.godot",
+      "git_blob_sha1": "92102437910f789b0f2f81bdc423654ce2106cbe",
+      "bytes": 341
+    },
+    {
+      "path": "codigo/checkpoints/03-primeira-gdextension/godot/Snake.gdextension",
+      "git_blob_sha1": "42ba514ea6015fc733cf81201b2b4c96d885ca59",
+      "bytes": 557
+    },
+    {
+      "path": "codigo/checkpoints/03-primeira-gdextension/README.md",
+      "git_blob_sha1": "695530e9ee523e0bf50e8cf38caf9d736abbfedf",
+      "bytes": 440
+    },
+    {
+      "path": "codigo/checkpoints/03-primeira-gdextension/rust/Cargo.toml",
+      "git_blob_sha1": "9a7dfa66ab8ed2a300450099476f4bfe797cee96",
+      "bytes": 190
+    },
+    {
+      "path": "codigo/checkpoints/03-primeira-gdextension/rust/src/lib.rs",
+      "git_blob_sha1": "79576edb083ca5422a32c73892ac98b7649fcbb2",
+      "bytes": 619
+    },
+    {
+      "path": "codigo/checkpoints/04-cobra-estatica/godot/.godot/extension_list.cfg",
+      "git_blob_sha1": "6b61c54440dce019a8eb45589f3321d3715190a9",
+      "bytes": 24
+    },
+    {
+      "path": "codigo/checkpoints/04-cobra-estatica/godot/Board.gd",
+      "git_blob_sha1": "48c99bc2d06edf3c845afab0b8e1103e0da8be27",
+      "bytes": 2007
+    },
+    {
+      "path": "codigo/checkpoints/04-cobra-estatica/godot/Main.tscn",
+      "git_blob_sha1": "46e2a4751eb71dbdd259227a3cedbf4a6ba9bbeb",
+      "bytes": 475
+    },
+    {
+      "path": "codigo/checkpoints/04-cobra-estatica/godot/project.godot",
+      "git_blob_sha1": "2cc45c2a7a9cbc49fcba6cd4b3ffa6998d6fcfaa",
+      "bytes": 341
+    },
+    {
+      "path": "codigo/checkpoints/04-cobra-estatica/godot/Snake.gdextension",
+      "git_blob_sha1": "986bef239c8c13cea25dcc178eec47091b9f6783",
+      "bytes": 557
+    },
+    {
+      "path": "codigo/checkpoints/04-cobra-estatica/README.md",
+      "git_blob_sha1": "ff4840357dd64efa141aa18c078d688b57c78ada",
+      "bytes": 434
+    },
+    {
+      "path": "codigo/checkpoints/04-cobra-estatica/rust/Cargo.toml",
+      "git_blob_sha1": "e643cfbb1f22c8cd2f45330dba4637557eb866ba",
+      "bytes": 190
+    },
+    {
+      "path": "codigo/checkpoints/04-cobra-estatica/rust/src/lib.rs",
+      "git_blob_sha1": "d5bdba6fbac20e62499f0562371da2f350fd5b40",
+      "bytes": 1011
+    },
+    {
+      "path": "codigo/checkpoints/05-regras-rust/godot/.godot/extension_list.cfg",
+      "git_blob_sha1": "6b61c54440dce019a8eb45589f3321d3715190a9",
+      "bytes": 24
+    },
+    {
+      "path": "codigo/checkpoints/05-regras-rust/godot/Board.gd",
+      "git_blob_sha1": "2a6d2df2729ef5aaa05edffe31b5db64b3f6a921",
+      "bytes": 2007
+    },
+    {
+      "path": "codigo/checkpoints/05-regras-rust/godot/Main.tscn",
+      "git_blob_sha1": "e20c800124fcaa14debb6861aa3088a042de68f2",
+      "bytes": 475
+    },
+    {
+      "path": "codigo/checkpoints/05-regras-rust/godot/project.godot",
+      "git_blob_sha1": "3945512ef803daea3370b19662487577bb7ae807",
+      "bytes": 341
+    },
+    {
+      "path": "codigo/checkpoints/05-regras-rust/godot/Snake.gdextension",
+      "git_blob_sha1": "39deea6b31bd37a7c16ed51585b8cb9d385e0b9f",
+      "bytes": 557
+    },
+    {
+      "path": "codigo/checkpoints/05-regras-rust/README.md",
+      "git_blob_sha1": "4a612fad5093bd5a88bc7f2f1dfb82e5745e2d73",
+      "bytes": 431
+    },
+    {
+      "path": "codigo/checkpoints/05-regras-rust/rust/Cargo.toml",
+      "git_blob_sha1": "6f976c0873470f8b5f5500638adc19534404963e",
+      "bytes": 190
+    },
+    {
+      "path": "codigo/checkpoints/05-regras-rust/rust/src/game.rs",
+      "git_blob_sha1": "79209acbeeef78a4a9a4e67ae084ddce82ecdc2e",
+      "bytes": 8936
+    },
+    {
+      "path": "codigo/checkpoints/05-regras-rust/rust/src/lib.rs",
+      "git_blob_sha1": "4fc71125b536c2a82d4d17009515e5ea413437c8",
+      "bytes": 1026
+    },
+    {
+      "path": "codigo/checkpoints/06-integracao-movimento/godot/.godot/extension_list.cfg",
+      "git_blob_sha1": "6b61c54440dce019a8eb45589f3321d3715190a9",
+      "bytes": 24
+    },
+    {
+      "path": "codigo/checkpoints/06-integracao-movimento/godot/Board.gd",
+      "git_blob_sha1": "591d433075e30100f65b6d378b852c6b6e9b6c59",
+      "bytes": 3791
+    },
+    {
+      "path": "codigo/checkpoints/06-integracao-movimento/godot/Main.tscn",
+      "git_blob_sha1": "f7260bda4efb77e2cc87d7aa47a49778dc3148ee",
+      "bytes": 477
+    },
+    {
+      "path": "codigo/checkpoints/06-integracao-movimento/godot/project.godot",
+      "git_blob_sha1": "464f90d35e34ad61870504fad58d6f752b385b3c",
+      "bytes": 341
+    },
+    {
+      "path": "codigo/checkpoints/06-integracao-movimento/godot/SmokeTest.gd",
+      "git_blob_sha1": "29f2b3947ade8dc53087b895fff6e186d81814a5",
+      "bytes": 1870
+    },
+    {
+      "path": "codigo/checkpoints/06-integracao-movimento/godot/Snake.gdextension",
+      "git_blob_sha1": "643f2402112fe0f8ed9d817d55526818e34019eb",
+      "bytes": 557
+    },
+    {
+      "path": "codigo/checkpoints/06-integracao-movimento/README.md",
+      "git_blob_sha1": "02e2a54df71d3ceec2fd2f11b5ea0f1545e526c9",
+      "bytes": 440
+    },
+    {
+      "path": "codigo/checkpoints/06-integracao-movimento/rust/Cargo.toml",
+      "git_blob_sha1": "73a0045584d99491321d9f0760483b68e426a71d",
+      "bytes": 190
+    },
+    {
+      "path": "codigo/checkpoints/06-integracao-movimento/rust/src/game.rs",
+      "git_blob_sha1": "79209acbeeef78a4a9a4e67ae084ddce82ecdc2e",
+      "bytes": 8936
+    },
+    {
+      "path": "codigo/checkpoints/06-integracao-movimento/rust/src/lib.rs",
+      "git_blob_sha1": "705519800b4d2a952a4fa58dc99eb9e33d284948",
+      "bytes": 1959
+    },
+    {
+      "path": "codigo/checkpoints/07-pausa-foco-idiomas/godot/.godot/extension_list.cfg",
+      "git_blob_sha1": "6b61c54440dce019a8eb45589f3321d3715190a9",
+      "bytes": 24
+    },
+    {
+      "path": "codigo/checkpoints/07-pausa-foco-idiomas/godot/Board.gd",
+      "git_blob_sha1": "f0449382f647f6767e8f4a2044037cd3080a020e",
+      "bytes": 5737
+    },
+    {
+      "path": "codigo/checkpoints/07-pausa-foco-idiomas/godot/Main.tscn",
+      "git_blob_sha1": "9c19b4b6e2a4d2a7f9f39ddc3d7a7c64bca5aac8",
+      "bytes": 478
+    },
+    {
+      "path": "codigo/checkpoints/07-pausa-foco-idiomas/godot/project.godot",
+      "git_blob_sha1": "7d5e90ff557a64b47e6d554210501fe51c419479",
+      "bytes": 341
+    },
+    {
+      "path": "codigo/checkpoints/07-pausa-foco-idiomas/godot/SmokeTest.gd",
+      "git_blob_sha1": "45f88be3a6485f0125ce7a0151c5f0f0f9939d3c",
+      "bytes": 5205
+    },
+    {
+      "path": "codigo/checkpoints/07-pausa-foco-idiomas/godot/Snake.gdextension",
+      "git_blob_sha1": "ecb6630ccbd7c5ed59c19151bad2ba4b4bcd14a6",
+      "bytes": 557
+    },
+    {
+      "path": "codigo/checkpoints/07-pausa-foco-idiomas/README.md",
+      "git_blob_sha1": "246a03415dbcc59bbbb44d883edf1150f7af32ad",
+      "bytes": 438
+    },
+    {
+      "path": "codigo/checkpoints/07-pausa-foco-idiomas/rust/Cargo.toml",
+      "git_blob_sha1": "d28044a9740b8bd01efbbeb3a56fc3bc91b0d61b",
+      "bytes": 190
+    },
+    {
+      "path": "codigo/checkpoints/07-pausa-foco-idiomas/rust/src/game.rs",
+      "git_blob_sha1": "79209acbeeef78a4a9a4e67ae084ddce82ecdc2e",
+      "bytes": 8936
+    },
+    {
+      "path": "codigo/checkpoints/07-pausa-foco-idiomas/rust/src/lib.rs",
+      "git_blob_sha1": "705519800b4d2a952a4fa58dc99eb9e33d284948",
+      "bytes": 1959
+    },
+    {
+      "path": "codigo/checkpoints/08-testes-regressao/godot/.godot/extension_list.cfg",
+      "git_blob_sha1": "6b61c54440dce019a8eb45589f3321d3715190a9",
+      "bytes": 24
+    },
+    {
+      "path": "codigo/checkpoints/08-testes-regressao/godot/Board.gd",
+      "git_blob_sha1": "f0449382f647f6767e8f4a2044037cd3080a020e",
+      "bytes": 5737
+    },
+    {
+      "path": "codigo/checkpoints/08-testes-regressao/godot/Main.tscn",
+      "git_blob_sha1": "2044a02b2100ac365d09964a9e5e427a1d01bd4c",
+      "bytes": 475
+    },
+    {
+      "path": "codigo/checkpoints/08-testes-regressao/godot/project.godot",
+      "git_blob_sha1": "7ac5875b183722049713c1190dfc862ce8a2cace",
+      "bytes": 341
+    },
+    {
+      "path": "codigo/checkpoints/08-testes-regressao/godot/SmokeTest.gd",
+      "git_blob_sha1": "45f88be3a6485f0125ce7a0151c5f0f0f9939d3c",
+      "bytes": 5205
+    },
+    {
+      "path": "codigo/checkpoints/08-testes-regressao/godot/Snake.gdextension",
+      "git_blob_sha1": "8715501cad495ab2a8b017ff052d96871b6b60a3",
+      "bytes": 557
+    },
+    {
+      "path": "codigo/checkpoints/08-testes-regressao/README.md",
+      "git_blob_sha1": "492aa5316166f4a2f59fee9c7ce752074c4ec151",
+      "bytes": 436
+    },
+    {
+      "path": "codigo/checkpoints/08-testes-regressao/rust/Cargo.toml",
+      "git_blob_sha1": "001e642241d694e98a0884e29e1c152398346352",
+      "bytes": 190
+    },
+    {
+      "path": "codigo/checkpoints/08-testes-regressao/rust/src/game.rs",
+      "git_blob_sha1": "79209acbeeef78a4a9a4e67ae084ddce82ecdc2e",
+      "bytes": 8936
+    },
+    {
+      "path": "codigo/checkpoints/08-testes-regressao/rust/src/lib.rs",
+      "git_blob_sha1": "705519800b4d2a952a4fa58dc99eb9e33d284948",
+      "bytes": 1959
+    },
+    {
+      "path": "codigo/checkpoints/08-testes-regressao/tools/__init__.py",
+      "git_blob_sha1": "1c5143dc4f3bfe718ef70941e0e82612bf8c269e",
+      "bytes": 42
+    },
+    {
+      "path": "codigo/checkpoints/08-testes-regressao/tools/run_checks.py",
+      "git_blob_sha1": "eeec5ccc27e8e6c2ad095bff4e7601f01d5a75b3",
+      "bytes": 3486
+    },
+    {
+      "path": "codigo/checkpoints/08-testes-regressao/tools/tests/test_run_checks.py",
+      "git_blob_sha1": "d750bf9a1c2163eafffdc05c9dce0c1cbfa5ff65",
+      "bytes": 3276
+    },
+    {
+      "path": "codigo/checkpoints/09-recorde-em-arquivo/godot/.godot/extension_list.cfg",
+      "git_blob_sha1": "6b61c54440dce019a8eb45589f3321d3715190a9",
+      "bytes": 24
+    },
+    {
+      "path": "codigo/checkpoints/09-recorde-em-arquivo/godot/Board.gd",
+      "git_blob_sha1": "7e0b1dbc3d89c0f28c273649d8c677cb01eda6a8",
+      "bytes": 6857
+    },
+    {
+      "path": "codigo/checkpoints/09-recorde-em-arquivo/godot/HighScoreStore.gd",
+      "git_blob_sha1": "84d5893d9590e03f1efea23bc7bdfdb04a2a55e4",
+      "bytes": 1186
+    },
+    {
+      "path": "codigo/checkpoints/09-recorde-em-arquivo/godot/Main.tscn",
+      "git_blob_sha1": "05077b0cbd77511a6ae8b43afa34f831dcc28a12",
+      "bytes": 479
+    },
+    {
+      "path": "codigo/checkpoints/09-recorde-em-arquivo/godot/project.godot",
+      "git_blob_sha1": "f296d4f7f3c937d5e41484fd0d8d192f323a6f0a",
+      "bytes": 341
+    },
+    {
+      "path": "codigo/checkpoints/09-recorde-em-arquivo/godot/SmokeTest.gd",
+      "git_blob_sha1": "0d911345669dd21798bdec6f27e886d63ede5b7d",
+      "bytes": 6860
+    },
+    {
+      "path": "codigo/checkpoints/09-recorde-em-arquivo/godot/Snake.gdextension",
+      "git_blob_sha1": "8baeda26e7fb431985fc2392a70efd54533e0c4b",
+      "bytes": 557
+    },
+    {
+      "path": "codigo/checkpoints/09-recorde-em-arquivo/README.md",
+      "git_blob_sha1": "44bd17b33b7efa9594f9d2b3e4efeb7d2aba8816",
+      "bytes": 438
+    },
+    {
+      "path": "codigo/checkpoints/09-recorde-em-arquivo/rust/Cargo.toml",
+      "git_blob_sha1": "af2ce8d52cca3dd2e527173d661d7b13fb2e88b9",
+      "bytes": 190
+    },
+    {
+      "path": "codigo/checkpoints/09-recorde-em-arquivo/rust/src/game.rs",
+      "git_blob_sha1": "79209acbeeef78a4a9a4e67ae084ddce82ecdc2e",
+      "bytes": 8936
+    },
+    {
+      "path": "codigo/checkpoints/09-recorde-em-arquivo/rust/src/lib.rs",
+      "git_blob_sha1": "705519800b4d2a952a4fa58dc99eb9e33d284948",
+      "bytes": 1959
+    },
+    {
+      "path": "codigo/checkpoints/09-recorde-em-arquivo/tools/__init__.py",
+      "git_blob_sha1": "1c5143dc4f3bfe718ef70941e0e82612bf8c269e",
+      "bytes": 42
+    },
+    {
+      "path": "codigo/checkpoints/09-recorde-em-arquivo/tools/run_checks.py",
+      "git_blob_sha1": "c3b50725c25500c4be3af8c3ad3e8d7c28000239",
+      "bytes": 3486
+    },
+    {
+      "path": "codigo/checkpoints/09-recorde-em-arquivo/tools/tests/test_run_checks.py",
+      "git_blob_sha1": "d750bf9a1c2163eafffdc05c9dce0c1cbfa5ff65",
+      "bytes": 3276
+    },
+    {
+      "path": "codigo/checkpoints/10-sqlite-historico/godot/.godot/extension_list.cfg",
+      "git_blob_sha1": "6b61c54440dce019a8eb45589f3321d3715190a9",
+      "bytes": 24
+    },
+    {
+      "path": "codigo/checkpoints/10-sqlite-historico/godot/Board.gd",
+      "git_blob_sha1": "aeb5d992a2d36c9f21d2fca9e95320d535cb510d",
+      "bytes": 7893
+    },
+    {
+      "path": "codigo/checkpoints/10-sqlite-historico/godot/HighScoreStore.gd",
+      "git_blob_sha1": "84d5893d9590e03f1efea23bc7bdfdb04a2a55e4",
+      "bytes": 1186
+    },
+    {
+      "path": "codigo/checkpoints/10-sqlite-historico/godot/Main.tscn",
+      "git_blob_sha1": "05077b0cbd77511a6ae8b43afa34f831dcc28a12",
+      "bytes": 479
+    },
+    {
+      "path": "codigo/checkpoints/10-sqlite-historico/godot/project.godot",
+      "git_blob_sha1": "c6c9ce986cccccda34cb46db26b49c410eddbe13",
+      "bytes": 342
+    },
+    {
+      "path": "codigo/checkpoints/10-sqlite-historico/godot/SmokeTest.gd",
+      "git_blob_sha1": "c249d6cbf82ee445349483fd7649da2537542a11",
+      "bytes": 9776
+    },
+    {
+      "path": "codigo/checkpoints/10-sqlite-historico/godot/Snake.gdextension",
+      "git_blob_sha1": "5ba89f90faddcd49d42ba7af172e8d5f688eeba9",
+      "bytes": 563
+    },
+    {
+      "path": "codigo/checkpoints/10-sqlite-historico/README.md",
+      "git_blob_sha1": "577c5141c3e455a7081bc5706010396ddb1ac40f",
+      "bytes": 436
+    },
+    {
+      "path": "codigo/checkpoints/10-sqlite-historico/rust/Cargo.lock",
+      "git_blob_sha1": "c3f4507c6854f26905b2cde40434fcf949dbbcf7",
+      "bytes": 7093
+    },
+    {
+      "path": "codigo/checkpoints/10-sqlite-historico/rust/Cargo.toml",
+      "git_blob_sha1": "d78e2bbc17eb5873d05380f0039fe8df38ee08d9",
+      "bytes": 250
+    },
+    {
+      "path": "codigo/checkpoints/10-sqlite-historico/rust/src/game.rs",
+      "git_blob_sha1": "79209acbeeef78a4a9a4e67ae084ddce82ecdc2e",
+      "bytes": 8936
+    },
+    {
+      "path": "codigo/checkpoints/10-sqlite-historico/rust/src/lib.rs",
+      "git_blob_sha1": "f0b86a1214c0c1e2cbb1f9966c83c8d6f094cf36",
+      "bytes": 2665
+    },
+    {
+      "path": "codigo/checkpoints/10-sqlite-historico/rust/src/score_store.rs",
+      "git_blob_sha1": "7a57b787c00a744e6ede2652d45975126a7ef831",
+      "bytes": 3337
+    },
+    {
+      "path": "codigo/checkpoints/10-sqlite-historico/tools/__init__.py",
+      "git_blob_sha1": "1c5143dc4f3bfe718ef70941e0e82612bf8c269e",
+      "bytes": 42
+    },
+    {
+      "path": "codigo/checkpoints/10-sqlite-historico/tools/run_checks.py",
+      "git_blob_sha1": "cb6ba4c6da93c3eec9fd699749412603d4333949",
+      "bytes": 3486
+    },
+    {
+      "path": "codigo/checkpoints/10-sqlite-historico/tools/tests/test_run_checks.py",
+      "git_blob_sha1": "d750bf9a1c2163eafffdc05c9dce0c1cbfa5ff65",
+      "bytes": 3276
+    },
+    {
+      "path": "codigo/checkpoints/11-ranking-local/godot/.godot/extension_list.cfg",
+      "git_blob_sha1": "6b61c54440dce019a8eb45589f3321d3715190a9",
+      "bytes": 24
+    },
+    {
+      "path": "codigo/checkpoints/11-ranking-local/godot/Board.gd",
+      "git_blob_sha1": "c3f73c15671769186122808e6a96162e7f051abe",
+      "bytes": 10051
+    },
+    {
+      "path": "codigo/checkpoints/11-ranking-local/godot/HighScoreStore.gd",
+      "git_blob_sha1": "84d5893d9590e03f1efea23bc7bdfdb04a2a55e4",
+      "bytes": 1186
+    },
+    {
+      "path": "codigo/checkpoints/11-ranking-local/godot/Main.tscn",
+      "git_blob_sha1": "05077b0cbd77511a6ae8b43afa34f831dcc28a12",
+      "bytes": 479
+    },
+    {
+      "path": "codigo/checkpoints/11-ranking-local/godot/project.godot",
+      "git_blob_sha1": "959b8be99a0232f8bfbef5b1ea012693993925f0",
+      "bytes": 342
+    },
+    {
+      "path": "codigo/checkpoints/11-ranking-local/godot/SmokeTest.gd",
+      "git_blob_sha1": "03e99bbedc35eeb00cc85107233204aad98c0a10",
+      "bytes": 12283
+    },
+    {
+      "path": "codigo/checkpoints/11-ranking-local/godot/Snake.gdextension",
+      "git_blob_sha1": "11a8134c845dd609716c355b8f5b1fead6874d00",
+      "bytes": 563
+    },
+    {
+      "path": "codigo/checkpoints/11-ranking-local/README.md",
+      "git_blob_sha1": "2cb60dcc18b0af9db6793fbc7b0e5adf4226b2bd",
+      "bytes": 433
+    },
+    {
+      "path": "codigo/checkpoints/11-ranking-local/rust/Cargo.lock",
+      "git_blob_sha1": "e12ae42dc7c8a74acc32772021d3efb1ea7d47b7",
+      "bytes": 7093
+    },
+    {
+      "path": "codigo/checkpoints/11-ranking-local/rust/Cargo.toml",
+      "git_blob_sha1": "ce1653e2572b267621ed42e69afbae3acc942bb7",
+      "bytes": 250
+    },
+    {
+      "path": "codigo/checkpoints/11-ranking-local/rust/src/game.rs",
+      "git_blob_sha1": "79209acbeeef78a4a9a4e67ae084ddce82ecdc2e",
+      "bytes": 8936
+    },
+    {
+      "path": "codigo/checkpoints/11-ranking-local/rust/src/lib.rs",
+      "git_blob_sha1": "cf7b4339484d82011555999f83f7a26f3f3ff1b4",
+      "bytes": 3295
+    },
+    {
+      "path": "codigo/checkpoints/11-ranking-local/rust/src/score_store.rs",
+      "git_blob_sha1": "7bed39fe8c5b2d0d009afbe05380a5d54ff92c0c",
+      "bytes": 4707
+    },
+    {
+      "path": "codigo/checkpoints/11-ranking-local/tools/__init__.py",
+      "git_blob_sha1": "1c5143dc4f3bfe718ef70941e0e82612bf8c269e",
+      "bytes": 42
+    },
+    {
+      "path": "codigo/checkpoints/11-ranking-local/tools/run_checks.py",
+      "git_blob_sha1": "a6fe7bbe839a2ea0c5b05bff9481978b9dfe1a23",
+      "bytes": 3486
+    },
+    {
+      "path": "codigo/checkpoints/11-ranking-local/tools/tests/test_run_checks.py",
+      "git_blob_sha1": "d750bf9a1c2163eafffdc05c9dce0c1cbfa5ff65",
+      "bytes": 3276
+    },
+    {
+      "path": "codigo/checkpoints/12-migracoes-sqlite/godot/.godot/extension_list.cfg",
+      "git_blob_sha1": "6b61c54440dce019a8eb45589f3321d3715190a9",
+      "bytes": 24
+    },
+    {
+      "path": "codigo/checkpoints/12-migracoes-sqlite/godot/Board.gd",
+      "git_blob_sha1": "c4d87521b4383fe39c9f9fb02184bb49014a8e03",
+      "bytes": 10338
+    },
+    {
+      "path": "codigo/checkpoints/12-migracoes-sqlite/godot/HighScoreStore.gd",
+      "git_blob_sha1": "84d5893d9590e03f1efea23bc7bdfdb04a2a55e4",
+      "bytes": 1186
+    },
+    {
+      "path": "codigo/checkpoints/12-migracoes-sqlite/godot/Main.tscn",
+      "git_blob_sha1": "05077b0cbd77511a6ae8b43afa34f831dcc28a12",
+      "bytes": 479
+    },
+    {
+      "path": "codigo/checkpoints/12-migracoes-sqlite/godot/project.godot",
+      "git_blob_sha1": "60af33d3e33e7f1396dcf5a93db319d41c546e42",
+      "bytes": 568
+    },
+    {
+      "path": "codigo/checkpoints/12-migracoes-sqlite/godot/SmokeTest.gd",
+      "git_blob_sha1": "682379d62c5bf4e03418d9380feb2e7993cb1e28",
+      "bytes": 13285
+    },
+    {
+      "path": "codigo/checkpoints/12-migracoes-sqlite/godot/Snake.gdextension",
+      "git_blob_sha1": "32ed022088b117954999e8691eca91f1fedbaa5e",
+      "bytes": 563
+    },
+    {
+      "path": "codigo/checkpoints/12-migracoes-sqlite/README.md",
+      "git_blob_sha1": "049cad16f51da674c2fe6a9b36ec1e53fafe53a3",
+      "bytes": 436
+    },
+    {
+      "path": "codigo/checkpoints/12-migracoes-sqlite/rust/Cargo.lock",
+      "git_blob_sha1": "17b1997d2fa599f9f059e956f9801dec42b7364b",
+      "bytes": 7093
+    },
+    {
+      "path": "codigo/checkpoints/12-migracoes-sqlite/rust/Cargo.toml",
+      "git_blob_sha1": "094e4450819d0a8e498b743730f9d6199e014cdc",
+      "bytes": 250
+    },
+    {
+      "path": "codigo/checkpoints/12-migracoes-sqlite/rust/src/game.rs",
+      "git_blob_sha1": "79209acbeeef78a4a9a4e67ae084ddce82ecdc2e",
+      "bytes": 8936
+    },
+    {
+      "path": "codigo/checkpoints/12-migracoes-sqlite/rust/src/lib.rs",
+      "git_blob_sha1": "a53b70c82c9054e9a48b9a747760076be285c25b",
+      "bytes": 3988
+    },
+    {
+      "path": "codigo/checkpoints/12-migracoes-sqlite/rust/src/score_store.rs",
+      "git_blob_sha1": "53ea54ba49f4ffe6296fc1fb84924e10a8ff45be",
+      "bytes": 12881
+    },
+    {
+      "path": "codigo/checkpoints/12-migracoes-sqlite/tools/__init__.py",
+      "git_blob_sha1": "1c5143dc4f3bfe718ef70941e0e82612bf8c269e",
+      "bytes": 42
+    },
+    {
+      "path": "codigo/checkpoints/12-migracoes-sqlite/tools/run_checks.py",
+      "git_blob_sha1": "4bd3683b623b846d25ceb77594b291dc747117b5",
+      "bytes": 3486
+    },
+    {
+      "path": "codigo/checkpoints/12-migracoes-sqlite/tools/tests/test_run_checks.py",
+      "git_blob_sha1": "d750bf9a1c2163eafffdc05c9dce0c1cbfa5ff65",
+      "bytes": 3276
+    },
+    {
+      "path": "codigo/checkpoints/13-ownership-e-gameview/godot/.godot/extension_list.cfg",
+      "git_blob_sha1": "6b61c54440dce019a8eb45589f3321d3715190a9",
+      "bytes": 24
+    },
+    {
+      "path": "codigo/checkpoints/13-ownership-e-gameview/godot/Board.gd",
+      "git_blob_sha1": "c4d87521b4383fe39c9f9fb02184bb49014a8e03",
+      "bytes": 10338
+    },
+    {
+      "path": "codigo/checkpoints/13-ownership-e-gameview/godot/HighScoreStore.gd",
+      "git_blob_sha1": "84d5893d9590e03f1efea23bc7bdfdb04a2a55e4",
+      "bytes": 1186
+    },
+    {
+      "path": "codigo/checkpoints/13-ownership-e-gameview/godot/Main.tscn",
+      "git_blob_sha1": "05077b0cbd77511a6ae8b43afa34f831dcc28a12",
+      "bytes": 479
+    },
+    {
+      "path": "codigo/checkpoints/13-ownership-e-gameview/godot/project.godot",
+      "git_blob_sha1": "ae293b24696e67f06ffb9097d050fbe44e820409",
+      "bytes": 342
+    },
+    {
+      "path": "codigo/checkpoints/13-ownership-e-gameview/godot/SmokeTest.gd",
+      "git_blob_sha1": "97eec2b3e5ce998853a600059d2ae09cf6b2b746",
+      "bytes": 13598
+    },
+    {
+      "path": "codigo/checkpoints/13-ownership-e-gameview/godot/Snake.gdextension",
+      "git_blob_sha1": "8cf1bd8acd8bc9460a672ae1cca6a21558489689",
+      "bytes": 563
+    },
+    {
+      "path": "codigo/checkpoints/13-ownership-e-gameview/README.md",
+      "git_blob_sha1": "24af04ece528729c4d713f028d402849afeb57c0",
+      "bytes": 440
+    },
+    {
+      "path": "codigo/checkpoints/13-ownership-e-gameview/rust/Cargo.lock",
+      "git_blob_sha1": "6eb0fe19820e8ce3a5479bfdb499fc7049cd6b42",
+      "bytes": 7093
+    },
+    {
+      "path": "codigo/checkpoints/13-ownership-e-gameview/rust/Cargo.toml",
+      "git_blob_sha1": "8a59a38eaf7f2193b5cfac5150363c253e783282",
+      "bytes": 250
+    },
+    {
+      "path": "codigo/checkpoints/13-ownership-e-gameview/rust/src/game.rs",
+      "git_blob_sha1": "88fe07678bac8cdaf692ea3722c37ba3df34425e",
+      "bytes": 10383
+    },
+    {
+      "path": "codigo/checkpoints/13-ownership-e-gameview/rust/src/lib.rs",
+      "git_blob_sha1": "0ca2555119c7080729e7d3861ca5895dedc48774",
+      "bytes": 4037
+    },
+    {
+      "path": "codigo/checkpoints/13-ownership-e-gameview/rust/src/score_store.rs",
+      "git_blob_sha1": "53ea54ba49f4ffe6296fc1fb84924e10a8ff45be",
+      "bytes": 12881
+    },
+    {
+      "path": "codigo/checkpoints/13-ownership-e-gameview/tools/__init__.py",
+      "git_blob_sha1": "1c5143dc4f3bfe718ef70941e0e82612bf8c269e",
+      "bytes": 42
+    },
+    {
+      "path": "codigo/checkpoints/13-ownership-e-gameview/tools/run_checks.py",
+      "git_blob_sha1": "7a0f5e63194a5f9c925a0035fd0a001905ed78eb",
+      "bytes": 3486
+    },
+    {
+      "path": "codigo/checkpoints/13-ownership-e-gameview/tools/tests/test_run_checks.py",
+      "git_blob_sha1": "d750bf9a1c2163eafffdc05c9dce0c1cbfa5ff65",
+      "bytes": 3276
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/godot/.godot/extension_list.cfg",
+      "git_blob_sha1": "6b61c54440dce019a8eb45589f3321d3715190a9",
+      "bytes": 24
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/godot/Board.gd",
+      "git_blob_sha1": "7fc46847da790cbd61c034dd71455c2811df818a",
+      "bytes": 11365
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/godot/HighScoreStore.gd",
+      "git_blob_sha1": "84d5893d9590e03f1efea23bc7bdfdb04a2a55e4",
+      "bytes": 1186
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/godot/Main.tscn",
+      "git_blob_sha1": "05077b0cbd77511a6ae8b43afa34f831dcc28a12",
+      "bytes": 479
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/godot/project.godot",
+      "git_blob_sha1": "cd0c32f0bfa58d8719001c6f6e0aa468b42876d1",
+      "bytes": 342
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/godot/ScoreHud.gd",
+      "git_blob_sha1": "d110317fb8601e2389227eb2f658613f39c01a26",
+      "bytes": 512
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/godot/SignalRecorder.gd",
+      "git_blob_sha1": "40cb6ff3a640523335212d04304b77d75689f849",
+      "bytes": 380
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/godot/SmokeTest.gd",
+      "git_blob_sha1": "0f7c8f9a8df47172073ab6956d67c37b005885f1",
+      "bytes": 15288
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/godot/Snake.gdextension",
+      "git_blob_sha1": "48a0f793ec806057f9c62551f6b735b4dabad742",
+      "bytes": 563
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/README.md",
+      "git_blob_sha1": "54be30f86bf2c531d838e31334306f75ad63943f",
+      "bytes": 432
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/rust/Cargo.lock",
+      "git_blob_sha1": "c8a81972230977dfe4c03f55ad3419cfee1e89eb",
+      "bytes": 7093
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/rust/Cargo.toml",
+      "git_blob_sha1": "7018daab9e9dd735241cbb629fcd2dce492c82de",
+      "bytes": 250
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/rust/src/game.rs",
+      "git_blob_sha1": "88fe07678bac8cdaf692ea3722c37ba3df34425e",
+      "bytes": 10383
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/rust/src/lib.rs",
+      "git_blob_sha1": "b6309756539771c5c26700053c927c461466fc5b",
+      "bytes": 4045
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/rust/src/score_store.rs",
+      "git_blob_sha1": "53ea54ba49f4ffe6296fc1fb84924e10a8ff45be",
+      "bytes": 12881
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/tools/__init__.py",
+      "git_blob_sha1": "1c5143dc4f3bfe718ef70941e0e82612bf8c269e",
+      "bytes": 42
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/tools/run_checks.py",
+      "git_blob_sha1": "696d47aafba4021ad13e033bef4123d6318f3341",
+      "bytes": 3486
+    },
+    {
+      "path": "codigo/checkpoints/14-sinais-e-hud/tools/tests/test_run_checks.py",
+      "git_blob_sha1": "d750bf9a1c2163eafffdc05c9dce0c1cbfa5ff65",
+      "bytes": 3276
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/godot/.godot/extension_list.cfg",
+      "git_blob_sha1": "6b61c54440dce019a8eb45589f3321d3715190a9",
+      "bytes": 24
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/godot/Board.gd",
+      "git_blob_sha1": "7fc46847da790cbd61c034dd71455c2811df818a",
+      "bytes": 11365
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/godot/HighScoreStore.gd",
+      "git_blob_sha1": "84d5893d9590e03f1efea23bc7bdfdb04a2a55e4",
+      "bytes": 1186
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/godot/Main.tscn",
+      "git_blob_sha1": "05077b0cbd77511a6ae8b43afa34f831dcc28a12",
+      "bytes": 479
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/godot/project.godot",
+      "git_blob_sha1": "193098148750a4007cc2a46c64b664388bf4dd6a",
+      "bytes": 342
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/godot/ScoreHud.gd",
+      "git_blob_sha1": "d110317fb8601e2389227eb2f658613f39c01a26",
+      "bytes": 512
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/godot/SignalRecorder.gd",
+      "git_blob_sha1": "40cb6ff3a640523335212d04304b77d75689f849",
+      "bytes": 380
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/godot/SmokeTest.gd",
+      "git_blob_sha1": "ae4738e360b47cd9eeb1c1f65e54fa36954817cc",
+      "bytes": 15395
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/godot/Snake.gdextension",
+      "git_blob_sha1": "e60c47f8bbb70fd4c4141a1094f7501c4860e7f9",
+      "bytes": 563
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/README.md",
+      "git_blob_sha1": "babb4e87e6a310e6419864834614629adcb6b673",
+      "bytes": 442
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/rust/Cargo.lock",
+      "git_blob_sha1": "ed5157c881341dc251a624361f6d6728faa67974",
+      "bytes": 7093
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/rust/Cargo.toml",
+      "git_blob_sha1": "03af18bc4b9cc4578df8d903269786ca80f7968e",
+      "bytes": 250
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/rust/src/game.rs",
+      "git_blob_sha1": "d8e0dee7be9475c67e32013b809a26e09decacd0",
+      "bytes": 12026
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/rust/src/lib.rs",
+      "git_blob_sha1": "4e6002f54266206ff49ba2a79f439041b2036ad7",
+      "bytes": 4036
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/rust/src/score_store.rs",
+      "git_blob_sha1": "53ea54ba49f4ffe6296fc1fb84924e10a8ff45be",
+      "bytes": 12881
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/tools/__init__.py",
+      "git_blob_sha1": "1c5143dc4f3bfe718ef70941e0e82612bf8c269e",
+      "bytes": 42
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/tools/run_checks.py",
+      "git_blob_sha1": "b997083d70edea898df48e245ef8c08add66bd65",
+      "bytes": 3486
+    },
+    {
+      "path": "codigo/checkpoints/15-laboratorio-desempenho/tools/tests/test_run_checks.py",
+      "git_blob_sha1": "d750bf9a1c2163eafffdc05c9dce0c1cbfa5ff65",
+      "bytes": 3276
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/godot/.godot/extension_list.cfg",
+      "git_blob_sha1": "6b61c54440dce019a8eb45589f3321d3715190a9",
+      "bytes": 24
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/godot/Board.gd",
+      "git_blob_sha1": "8314ac06a80f31cd4f8ba2fd492743bdbcbfa171",
+      "bytes": 10024
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/godot/HighScoreStore.gd",
+      "git_blob_sha1": "8ea1da0721e5c8bf1b55745f63b5d5e1423cbc78",
+      "bytes": 1087
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/godot/Main.tscn",
+      "git_blob_sha1": "05077b0cbd77511a6ae8b43afa34f831dcc28a12",
+      "bytes": 479
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/godot/project.godot",
+      "git_blob_sha1": "ed4dadc660e7b897f64274e7343ecdc7c0363794",
+      "bytes": 568
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/godot/ScoreHud.gd",
+      "git_blob_sha1": "d110317fb8601e2389227eb2f658613f39c01a26",
+      "bytes": 512
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/godot/SignalRecorder.gd",
+      "git_blob_sha1": "40cb6ff3a640523335212d04304b77d75689f849",
+      "bytes": 380
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/godot/SmokeTest.gd",
+      "git_blob_sha1": "f6b9d1628f8b9e4a5f4829dad6d1c7df048c087d",
+      "bytes": 15395
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/godot/Snake.gdextension",
+      "git_blob_sha1": "b9ade11a9b799418b1ebd5844f35860cddea4434",
+      "bytes": 563
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/README.md",
+      "git_blob_sha1": "723c8061e59042918ba2e944b254db36de344ef6",
+      "bytes": 441
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/rust/Cargo.lock",
+      "git_blob_sha1": "c74ded46459cd80149afb82df2a3201476cc79e8",
+      "bytes": 7093
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/rust/Cargo.toml",
+      "git_blob_sha1": "ecc3ca24c7ec0786d23cfdd1e03bef4756cf4991",
+      "bytes": 250
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/rust/src/game.rs",
+      "git_blob_sha1": "d8e0dee7be9475c67e32013b809a26e09decacd0",
+      "bytes": 12026
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/rust/src/lib.rs",
+      "git_blob_sha1": "0474372f7e3a2299390be4bc1a170974b23053e5",
+      "bytes": 4037
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/rust/src/score_store.rs",
+      "git_blob_sha1": "53ea54ba49f4ffe6296fc1fb84924e10a8ff45be",
+      "bytes": 12881
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/tools/__init__.py",
+      "git_blob_sha1": "1c5143dc4f3bfe718ef70941e0e82612bf8c269e",
+      "bytes": 42
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/tools/binary_format.py",
+      "git_blob_sha1": "0838b98bf73a890597504851b286e87eb38d76a0",
+      "bytes": 2888
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/tools/export_presets.linux-x86_64.cfg",
+      "git_blob_sha1": "0eba32b0a4c3fd63a042dd7ba4d18f58875f150b",
+      "bytes": 273
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/tools/run_checks.py",
+      "git_blob_sha1": "5693cd45ebcfcb1cd7ee085ff1ce9fb9469026d8",
+      "bytes": 3486
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/tools/stage_for_export.py",
+      "git_blob_sha1": "b8edbea40711a033bbf5f24c6c786e1564c53aee",
+      "bytes": 4360
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/tools/tests/test_run_checks.py",
+      "git_blob_sha1": "d750bf9a1c2163eafffdc05c9dce0c1cbfa5ff65",
+      "bytes": 3276
+    },
+    {
+      "path": "codigo/checkpoints/16-preparacao-exportacao/tools/tests/test_stage_for_export.py",
+      "git_blob_sha1": "777bd456eb6e9e15daf4cc29d6b5d26c9b7bfa05",
+      "bytes": 3229
+    },
+    {
+      "path": "codigo/labs/snake_rust_lab/Cargo.toml",
+      "git_blob_sha1": "17d5ad270e46e0e67c4dd45b00baa863f7404bf2",
+      "bytes": 101
+    },
+    {
+      "path": "codigo/labs/snake_rust_lab/README.md",
+      "git_blob_sha1": "7f91690d9e9221e7bc6afff40d6012bb09b7e147",
+      "bytes": 954
+    },
+    {
+      "path": "codigo/labs/snake_rust_lab/src/lib.rs",
+      "git_blob_sha1": "959e4a0bf3c21ec0426be4be2d47856ac1241deb",
+      "bytes": 4290
+    },
+    {
+      "path": "codigo/tools/book_checkpoints.py",
+      "git_blob_sha1": "250ef0f2d2433e5092f2afdeedf05e3aff827b98",
+      "bytes": 11071
+    },
+    {
+      "path": "codigo/transicoes/02-03.patch",
+      "git_blob_sha1": "2e98ffbd2c9c8ec47298213299a76747c5d779fd",
+      "bytes": 2958
+    },
+    {
+      "path": "codigo/transicoes/04-05.patch",
+      "git_blob_sha1": "346c8f611e6e4ec9d219d395bb6954b950e32c47",
+      "bytes": 11866
+    },
+    {
+      "path": "codigo/transicoes/05-06.patch",
+      "git_blob_sha1": "b676ffd7e0fefc4dd3f1ac99ff26bc39b8e2e4af",
+      "bytes": 10555
+    },
+    {
+      "path": "codigo/transicoes/09-10.patch",
+      "git_blob_sha1": "b4a60fb71ea149ab642391246f06aa7d8c0cfc28",
+      "bytes": 15616
+    },
+    {
+      "path": "codigo/transicoes/10-11.patch",
+      "git_blob_sha1": "f1a98984c8cc994c06a521a303dbd379750c9d87",
+      "bytes": 17411
+    },
+    {
+      "path": "codigo/transicoes/11-12.patch",
+      "git_blob_sha1": "6c271d5d3570444a5bf35ed5b5098b44e262ed9d",
+      "bytes": 25429
+    },
+    {
+      "path": "LICENSE.txt",
+      "git_blob_sha1": "139db21227900675a536ee6c938419ad7e72970b",
+      "bytes": 1070
+    },
+    {
+      "path": "README_PTBR.md",
+      "git_blob_sha1": "447cc9b6b324fe3406317ef6c7b2c740612e65a3",
+      "bytes": 2605
+    }
+  ]
+}
