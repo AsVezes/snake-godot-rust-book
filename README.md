@@ -7,7 +7,7 @@ Este repositório público disponibiliza o **código complementar** do livro: **
 
 ## Obter o material
 
-Use **Code → Download ZIP** nesta página e extraia o pacote. Leia o [guia do leitor](README_PTBR.md), que explica as pastas e os comandos. Alternativamente, clone o repositório com Git. O [MANIFEST.json](MANIFEST.json) registra a revisão de código e os hashes Git dos arquivos.
+Use **Code → Download ZIP** nesta página e extraia o pacote. Leia o [guia PT-BR](README_PTBR.md) ou o [English reader guide](README_ENUS.md), que explicam as pastas, a continuidade do mesmo projeto e os comandos para cada edição. Alternativamente, clone o repositório com Git. O [MANIFEST.json](MANIFEST.json) registra a revisão de código e os hashes Git dos arquivos.
 
 - [16 checkpoints](codigo/checkpoints/) — cada etapa é uma referência independente.
 - [Laboratório Rust R1/R2](codigo/labs/snake_rust_lab/) — soluções de apoio, não substitui exercícios.
